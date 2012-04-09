@@ -320,9 +320,13 @@ func (self *Tester) Log(moreOutput string) {
 func ToString(value interface{}) string {
 	switch value0 := value.(type) {
 	case bool:
+		return fmt.Sprintf("%v", value)
     case int, int8, int16, int32, int64:
+		return fmt.Sprintf("%v", value)
     case uint, uint8, uint16, uint32, uint64:
+		return fmt.Sprintf("%v", value)
 	case string:
+		return fmt.Sprintf("%v", value)
     case float32:
 		return fmt.Sprintf("%v", value)
     case float64:
