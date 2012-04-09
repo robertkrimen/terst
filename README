@@ -1,0 +1,24 @@
+terst - A terse, easy-to-use testing library for Go (golang)
+
+DESCRIPTION
+
+SYNOPSIS
+
+    import (
+        "testing"
+        . "terst"
+    )
+
+    func Test(t *testing.T) {
+        WithTester(t) // Associate terst methods with the current testing.T
+        Is("apple", "apple") // Pass
+        Is("apple", "orange") // Fail: emits nice-looking diagnostic 
+        Compare(1, ">", 0) // Pass
+
+        Is(1, 1.0) // Fail: comparing an integer to a float
+        Compare(1, "==", 1.0) // Pass
+        Like(1, 1.0) // Pass
+    }
+
+AUTHOR
+    Robert Krimen <robertkrimen@gmail.com>

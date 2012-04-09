@@ -13,9 +13,15 @@ func Test(t *testing.T) {
     fmt.Printf("%v %v %v %v\n", a, b, c, int64(a))
 
 
+    /*result := uint64(math.MaxUint64) > int64(math.MaxInt32)*/
+    /*fmt.Printf("%v", result)*/
 	WithTester(t)
-    Compare(false, "<", true)
+    Like(1, 1.1)
+    Is(1, 1.0, "Abc")
+    Compare(1, "==", 1.0)
+    Compare(uint64(math.MaxUint64), "<", int64(math.MinInt32))
     return
+    Compare(false, "<", true)
     Compare("apple", "==", "banana")
     Compare("apple", "==", true)
     Compare(false, "==", true)

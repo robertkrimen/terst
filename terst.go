@@ -170,6 +170,7 @@ func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ..
 
 func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Like", callDepth+1, have, want, arguments)
+    pass := true
 	switch want0 := want.(type) {
 	case string:
 		haveString := ToString(have)
@@ -180,12 +181,18 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 		if error != nil {
 			panic("regexp.Match(" + want0 + ", ...): " + error.Error())
 		}
-		if !pass {
-			self.Log(self.failMessageForMatch(test, haveString, want0, wantLike))
-			self.TestingT.Fail()
-			return false
-		}
+    default:
+        operator := "=="
+        if !wantLike {
+            operator = "!="
+        }
+        pass = compare(have, operator, want)
 	}
+    if !pass {
+        self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
+        self.TestingT.Fail()
+        return false
+    }
 	return true
 }
 
@@ -202,6 +209,16 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
     test := newTest("Compare", callDepth+1, left, right, arguments)
     test.operator = operator
+    pass := compare(left, operator, right)
+    if !pass {
+        self.Log(self.failMessageForCompare(test))
+        self.TestingT.Fail()
+        return false
+    }
+    return false
+}
+
+func compare(left interface{}, operator string, right interface{}) bool {
     pass := true
     comparator := newComparator(left, right)
     switch operator {
@@ -226,12 +243,7 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
             panic(fmt.Errorf("Compare operator (%v) is invalid", operator))
         }
     }
-    if !pass {
-        self.Log(self.failMessageForCompare(test))
-        self.TestingT.Fail()
-        return false
-    }
-    return false
+    return pass
 }
 
 // Compare / Comparator
@@ -429,9 +441,9 @@ func (self *Tester) failMessageForCompare(test *aTest) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-           %s
-           %s
-           %s
+                       %s
+                       %s
+                       %s
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), test.operator, ToString(test.want))
 }
 
@@ -448,17 +460,17 @@ func (self *Tester) failMessageForIs(test *aTest) string {
     `, test.file, test.line, test.Description(), test.kind, test.have, test.want)
 }
 
-func (self *Tester) failMessageForMatch(test *aTest, have, want string, wantMatch bool) string {
-	expect := "mismatched"
-	if !wantMatch {
-		expect = "   matched"
+func (self *Tester) failMessageForLike(test *aTest, have, want string, wantLike bool) string {
+	expect := "unlike"
+	if !wantLike {
+		expect = "  like"
 	}
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   got: %s
-           %s: %s
-    `, test.file, test.line, test.Description(), test.kind, test.have, expect, test.want)
+               %s: %s
+    `, test.file, test.line, test.Description(), test.kind, have, expect, want)
 }
 
 // ...
@@ -500,7 +512,6 @@ type aTest struct {
 	line       int
 	functionPC uintptr
 	function   string
-
 }
 
 func newTest(kind string, callDepth int, have, want interface{}, arguments ...interface{}) *aTest {
