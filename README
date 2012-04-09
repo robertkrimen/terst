@@ -10,7 +10,7 @@ SYNOPSIS
     )
 
     func Test(t *testing.T) {
-        WithTester(t) // Associate terst methods with the current testing.T
+        Terst(t) // Associate terst methods with t (the current testing.T)
         Is("apple", "apple") // Pass
         Is("apple", "orange") // Fail: emits nice-looking diagnostic 
         Compare(1, ">", 0) // Pass
