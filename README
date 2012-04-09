@@ -22,3 +22,6 @@ SYNOPSIS
 
 AUTHOR
     Robert Krimen <robertkrimen@gmail.com>
+
+FUTURE
+- Sanity check value of TestingT via the stack
