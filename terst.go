@@ -26,7 +26,7 @@ func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...int
     test := newTest("Is", callDepth + 1, have, want, arguments)
 	pass := have == want
     if (!pass) {
-        self.Log(self.IsFailMessage(test))
+        self.Log(self.failMessageForIs(test))
         self.TestingT.Fail()
         return false
     }
@@ -47,7 +47,7 @@ func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...
     test := newTest("IsNot", callDepth + 1, have, want, arguments)
 	pass := have != want
     if (!pass) {
-        self.Log(self.IsFailMessage(test))
+        self.Log(self.failMessageForIs(test))
         self.TestingT.Fail()
         return false
     }
@@ -57,24 +57,37 @@ func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...
 // Like
 
 func Like(have, want interface{}, arguments ...interface{}) bool {
-    return OurTester().AtLike(1, have, want, arguments...)
+    return OurTester().AtLike(true, 1, have, want, arguments...)
 }
 
 func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool {
-    return self.AtLike(1, have, want, arguments...)
+    return self.AtLike(true, 1, have, want, arguments...)
 }
 
-func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+// Unlike
+
+func Unlike(have, want interface{}, arguments ...interface{}) bool {
+    return OurTester().AtLike(false, 1, have, want, arguments...)
+}
+
+func (self *Tester) Unlike(have, want interface{}, arguments ...interface{}) bool {
+    return self.AtLike(false, 1, have, want, arguments...)
+}
+
+func (self *Tester) AtLike(wantMatch bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
     test := newTest("Like", callDepth + 1, have, want, arguments)
     switch want0 := want.(type) {
     case string:
         haveString := ToString(have)
         pass, error := regexp.Match(want0, []byte(haveString))
+        if !wantMatch {
+            pass = !pass
+        }
         if error != nil {
             panic("regexp.Match(" + want0 + ", ...): " + error.Error())
         }
         if (!pass) {
-            self.Log(self.IsFailMessage(test))
+            self.Log(self.failMessageForMatch(test, haveString, want0, wantMatch))
             self.TestingT.Fail()
             return false
         }
@@ -82,9 +95,9 @@ func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...i
     return true
 }
 
-// ...
+// failMessage*
 
-func (self *Tester) IsFailMessage(test *aTest) string {
+func (self *Tester) failMessageForIs(test *aTest) string {
     return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
@@ -92,6 +105,21 @@ func (self *Tester) IsFailMessage(test *aTest) string {
              expected: %s
     `, test.file, test.line, test.Description(), test.kind, test.have, test.want)
 }
+
+func (self *Tester) failMessageForMatch(test *aTest, have, want string, wantMatch bool) string {
+    expect := "mismatched"
+    if !wantMatch {
+        expect = "   matched"
+    }
+    return self.FormatMessage(`
+        %s:%d: %s 
+           Failed test (%s)
+                  got: %s
+           %s: %s
+    `, test.file, test.line, test.Description(), test.kind, test.have, expect, test.want)
+}
+
+// ...
 
 type Tester struct {
     TestingT *testing.T
