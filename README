@@ -25,3 +25,4 @@ AUTHOR
 
 FUTURE
 - Sanity check value of TestingT via the stack
+- Add #=, #~, #* strictness tweaking to Compare
