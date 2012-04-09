@@ -115,12 +115,16 @@ func AtFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
 }
 
 func (self *Tester) AtFailMessage(test *aTest, kind string) string {
-    message := fmt.Sprintf(`
+    return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   got: %s
              expected: %s
     `, test.file, test.line, test.Description(), kind, test.have, test.want)
+}
+
+func (self *Tester) FormatMessage(format string, arguments ...interface{}) string {
+    message := fmt.Sprintf(format, arguments...)
     message = strings.TrimLeft(message, "\n")
     message = strings.TrimRight(message, " \n")
     return message + "\n\n"
