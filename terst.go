@@ -203,21 +203,28 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
     test := newTest("Compare", callDepth+1, left, right, arguments)
     test.operator = operator
     pass := true
+    comparator := newComparator(left, right)
     switch operator {
     case "==":
-        pass = left == right
+        pass = comparator.isEqual()
     case "!=":
-        pass = left != right
-    case "<":
-        pass = LessThan(left, right)
-    case "<=":
-        pass = LessThanOrEqual(left, right)
-    case ">":
-        pass = !LessThanOrEqual(left, right)
-    case ">=":
-        pass = !LessThan(left, right)
+        pass = !comparator.isEqual()
     default:
-        panic("Compare operator (" + operator + ") is invalid")
+        if !comparator.hasOrder() {
+            panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operator, right))
+        }
+        switch operator {
+        case "<":
+            pass = comparator.compare() == -1
+        case "<=":
+            pass = comparator.compare() <= 0
+        case ">":
+            pass = comparator.compare() == 1
+        case ">=":
+            pass = comparator.compare() >= 0
+        default:
+            panic(fmt.Errorf("Compare operator (%v) is invalid", operator))
+        }
     }
     if !pass {
         self.Log(self.failMessageForCompare(test))
@@ -226,134 +233,185 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
     }
     return false
 }
-// Compare / LessThan
 
-func LessThan(left interface{}, right interface{}) bool {
-    switch left.(type) {
+// Compare / Comparator
+
+type kind int
+const (
+    isInvalid = iota
+    isInteger
+    isFloat
+    isString
+    isBoolean
+)
+
+func comparatorValue(value interface{}) (reflect.Value, int) {
+    reflectValue := reflect.ValueOf(value)
+    kind := isInvalid
+    switch value.(type) {
     case int, int8, int16, int32, int64:
-        return LessThanInteger(integerValue(left), right)
+        kind = isInteger
     case uint, uint8, uint16, uint32, uint64:
-        return LessThanUnsignedInteger(unsignedIntegerValue(left), right)
+        kind = isInteger
     case float32, float64:
-        return LessThanFloat(floatValue(left), right)
+        kind = isFloat
     case string:
-        return LessThanString(left.(string), right)
+        kind = isString
+    case bool:
+        kind = isBoolean
     }
-    panic("LessThanOrEqual")
+    return reflectValue, kind
 }
 
-func LessThanString(left string, right interface{}) bool {
-    switch right.(type) {
+func toFloat(value reflect.Value) float64 {
+    switch result := value.Interface().(type) {
+    case int, int8, int16, int32, int64:
+        return float64(value.Int())
+    case uint, uint8, uint16, uint32, uint64:
+        return float64(value.Uint())
+    case float32, float64:
+        return float64(value.Float())
+    default:
+        panic(fmt.Errorf("toFloat( %v )", result))
+    }
+    panic(0)
+}
+
+func toInteger(value reflect.Value) *big.Int {
+    switch result := value.Interface().(type) {
+    case int, int8, int16, int32, int64:
+        return big.NewInt(value.Int())
+    case uint, uint8, uint16, uint32, uint64:
+        yield := big.NewInt(0)
+        yield.SetString(fmt.Sprintf("%v", value.Uint()), 10)
+        return yield
+    default:
+        panic(fmt.Errorf("toInteger( %v )", result))
+    }
+    panic(0)
+}
+
+func toString(value reflect.Value) string {
+    switch result := value.Interface().(type) {
     case string:
-        return left < right.(string)
+        return result
+    default:
+        panic(fmt.Errorf("toString( %v )", result))
     }
-    panic("LessThanString")
+    panic(0)
 }
 
-func LessThanInteger(left int64, right interface{}) bool {
-    switch right.(type) {
-    case int, int8, int16, int32, int64:
-        return left < integerValue(right)
-    case uint, uint8, uint16, uint32, uint64:
-        bigLeft := big.NewInt(left)
-        bigRight := big.NewInt(0)
-        bigRight.SetString(fmt.Sprintf("%v", right), 10)
-        return bigLeft.Cmp(bigRight) == -1
-    case float32, float64:
-        return float64(left) < floatValue(right)
+func toBoolean(value reflect.Value) bool {
+    switch result := value.Interface().(type) {
+    case bool:
+        return result
+    default:
+        panic(fmt.Errorf("toBoolean( %v )", result))
     }
-    panic("LessThanInteger")
+    panic(0)
 }
 
-func LessThanUnsignedInteger(left uint64, right interface{}) bool {
-    switch right.(type) {
-    case int, int8, int16, int32, int64:
-        bigLeft := big.NewInt(0)
-        bigLeft.SetString(fmt.Sprintf("%v", left), 10)
-        bigRight := big.NewInt(integerValue(right))
-        return bigLeft.Cmp(bigRight) == -1
-    case uint, uint8, uint16, uint32, uint64:
-        return left < unsignedIntegerValue(right)
-    case float32, float64:
-        return float64(left) < floatValue(right)
-    }
-    panic("LessThanUnsignedInteger")
+type ofComparator interface {
+    compare() int
+    isEqual() bool
+    hasOrder() bool
 }
 
-func LessThanFloat(left float64, right interface{}) bool {
-    switch right.(type) {
-    case int, int8, int16, int32, int64:
-        return left < float64(integerValue(right))
-    case uint, uint8, uint16, uint32, uint64:
-        return left < float64(unsignedIntegerValue(right))
-    case float32, float64:
-        return left < floatValue(right)
-    }
-    panic("LessThanFloat")
+type baseComparator struct {
+    order bool
+}
+func (self *baseComparator) compare() int {
+    panic(fmt.Errorf("Attempt to .compare() on type without order"))
+}
+func (self *baseComparator) hasOrder() bool {
+    return self.order
 }
 
-func LessThanOrEqual(left interface{}, right interface{}) bool {
-    switch left.(type) {
-    case int, int8, int16, int32, int64:
-        return LessThanOrEqualInteger(integerValue(left), right)
-    case uint, uint8, uint16, uint32, uint64:
-        return LessThanOrEqualUnsignedInteger(unsignedIntegerValue(left), right)
-    case float32, float64:
-        return LessThanOrEqualFloat(floatValue(left), right)
-    case string:
-        return LessThanOrEqualString(left.(string), right)
+type floatComparator struct {
+    *baseComparator
+    left float64
+    right float64
+}
+func (self *floatComparator) compare() int {
+    if self.left == self.right {
+        return 0
+    } else if self.left < self.right {
+        return -1
     }
-    panic("LessThanOrEqual")
+    return 1
+}
+func (self *floatComparator) isEqual() bool {
+    return self.left == self.right
 }
 
-func LessThanOrEqualString(left string, right interface{}) bool {
-    switch right.(type) {
-    case string:
-        return left <= right.(string)
-    }
-    panic("LessThanOrEqualString")
+type integerComparator struct {
+    *baseComparator
+    left *big.Int
+    right *big.Int
+}
+func (self *integerComparator) compare() int {
+    return self.left.Cmp(self.right)
+}
+func (self *integerComparator) isEqual() bool {
+    return 0 == self.left.Cmp(self.right)
 }
 
-func LessThanOrEqualInteger(left int64, right interface{}) bool {
-    switch right.(type) {
-    case int, int8, int16, int32, int64:
-        return left <= integerValue(right)
-    case uint, uint8, uint16, uint32, uint64:
-        bigLeft := big.NewInt(left)
-        bigRight := big.NewInt(0)
-        bigRight.SetString(fmt.Sprintf("%v", right), 10)
-        return bigLeft.Cmp(bigRight) <= 0
-    case float32, float64:
-        return float64(left) <= floatValue(right)
+type stringComparator struct {
+    *baseComparator
+    left string
+    right string
+}
+func (self *stringComparator) compare() int {
+    if self.left == self.right {
+        return 0
+    } else if self.left < self.right {
+        return -1
     }
-    panic("LessThanOrEqualInteger")
+    return 1
+}
+func (self *stringComparator) isEqual() bool {
+    return self.left == self.right
 }
 
-func LessThanOrEqualUnsignedInteger(left uint64, right interface{}) bool {
-    switch right.(type) {
-    case int, int8, int16, int32, int64:
-        bigLeft := big.NewInt(0)
-        bigLeft.SetString(fmt.Sprintf("%v", left), 10)
-        bigRight := big.NewInt(integerValue(right))
-        return bigLeft.Cmp(bigRight) <= 0
-    case uint, uint8, uint16, uint32, uint64:
-        return left <= unsignedIntegerValue(right)
-    case float32, float64:
-        return float64(left) < floatValue(right)
-    }
-    panic("LessThanOrEqualUnsignedInteger")
+type booleanComparator struct {
+    *baseComparator
+    left bool
+    right bool
+}
+func (self *booleanComparator) isEqual() bool {
+    return self.left == self.right
 }
 
-func LessThanOrEqualFloat(left float64, right interface{}) bool {
-    switch right.(type) {
-    case int, int8, int16, int32, int64:
-        return left <= float64(integerValue(right))
-    case uint, uint8, uint16, uint32, uint64:
-        return left <= float64(unsignedIntegerValue(right))
-    case float32, float64:
-        return left <= floatValue(right)
+func newComparator(left interface{}, right interface{}) ofComparator {
+    leftValue, leftKind := comparatorValue(left)
+    rightValue, rightKind := comparatorValue(right)
+    if false {
+    } else if leftKind == isFloat || rightKind == isFloat {
+        return &floatComparator{
+            &baseComparator{true},
+            toFloat(leftValue),
+            toFloat(rightValue),
+        }
+    } else if leftKind == isInteger || rightKind == isInteger {
+        return &integerComparator{
+            &baseComparator{true},
+            toInteger(leftValue),
+            toInteger(rightValue),
+        }
+    } else if leftKind == isString {
+        return &stringComparator{
+            &baseComparator{true},
+            toString(leftValue),
+            toString(rightValue),
+        }
+    } else if leftKind == isBoolean {
+        return &booleanComparator{
+            &baseComparator{false},
+            toBoolean(leftValue),
+            toBoolean(rightValue),
+        }
     }
-    panic("LessThanOrEqualFloat")
+    panic(fmt.Errorf("Comparing (%v) to (%v) not implemented", left, right))
 }
 
 // failMessage*

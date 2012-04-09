@@ -14,8 +14,15 @@ func Test(t *testing.T) {
 
 
 	WithTester(t)
-	Equal("apple", "orange")
+    Compare(false, "<", true)
     return
+    Compare("apple", "==", "banana")
+    Compare("apple", "==", true)
+    Compare(false, "==", true)
+    Compare(uint(1), "==", int(2))
+    Compare(uint(1), "==", 1.1)
+
+	Equal("apple", "orange")
 	Is("apple", "apple")
 	IsNot("apple", "orange")
 	Unlike("apple", `pp`)
