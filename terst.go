@@ -13,6 +13,27 @@ import (
 	"unsafe"
 )
 
+var (
+    expectResult bool
+    isTesting bool = false
+)
+
+func (self *Tester) hadResult(result bool, test *aTest, onFail func()) bool {
+    if isTesting {
+        if expectResult != result {
+            self.Log(fmt.Sprintf("Expect %v but got %v\n", expectResult, result))
+            onFail()
+            self.fail()
+        }
+        return result
+    }
+    if !result {
+        onFail()
+        self.fail()
+    }
+    return result
+}
+
 // Pass
 
 func Pass(have bool, arguments ...interface{}) bool {
@@ -47,13 +68,10 @@ func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments 
 		kind = "Fail"
 	}
 	test := newTest(kind, callDepth+1, have, want, arguments)
-	pass := have == want
-	if !pass {
+	didPass := have == want
+    return self.hadResult(didPass, test, func(){
 		self.Log(self.failMessageForPass(test))
-		self.TestingT.Fail()
-		return false
-	}
-	return true
+    })
 }
 
 // Equal
@@ -68,13 +86,10 @@ func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool
 
 func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("==", callDepth+1, have, want, arguments)
-	pass := have == want
-	if !pass {
+	didPass := have == want
+    return self.hadResult(didPass, test, func(){
 		self.Log(self.failMessageForEqual(test))
-		self.TestingT.Fail()
-		return false
-	}
-	return true
+    })
 }
 
 // Unequal
@@ -89,13 +104,10 @@ func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bo
 
 func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("!=", callDepth+1, have, want, arguments)
-	pass := have != want
-	if !pass {
+	didPass := have != want
+    return self.hadResult(didPass, test, func(){
 		self.Log(self.failMessageForIs(test))
-		self.TestingT.Fail()
-		return false
-	}
-	return true
+    })
 }
 
 // Is
@@ -110,13 +122,10 @@ func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
 
 func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Is", callDepth+1, have, want, arguments)
-	pass := have == want
-	if !pass {
+	didPass := have == want
+    return self.hadResult(didPass, test, func(){
 		self.Log(self.failMessageForIs(test))
-		self.TestingT.Fail()
-		return false
-	}
-	return true
+    })
 }
 
 // IsNot
@@ -131,13 +140,10 @@ func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool
 
 func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("IsNot", callDepth+1, have, want, arguments)
-	pass := have != want
-	if !pass {
+	didPass := have != want
+    return self.hadResult(didPass, test, func(){
 		self.Log(self.failMessageForIs(test))
-		self.TestingT.Fail()
-		return false
-	}
-	return true
+    })
 }
 
 // Like
@@ -170,30 +176,32 @@ func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ..
 
 func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Like", callDepth+1, have, want, arguments)
-    pass := true
+    if !wantLike {
+        test.kind = "Unlike"
+    }
+    didPass := true
 	switch want0 := want.(type) {
 	case string:
 		haveString := ToString(have)
-		pass, error := regexp.Match(want0, []byte(haveString))
+		didPass, error := regexp.Match(want0, []byte(haveString))
 		if !wantLike {
-			pass = !pass
+			didPass = !didPass
 		}
 		if error != nil {
 			panic("regexp.Match(" + want0 + ", ...): " + error.Error())
 		}
+        want = fmt.Sprintf("(?:%v)", want) // Make it look like a regular expression
+
     default:
         operator := "=="
         if !wantLike {
             operator = "!="
         }
-        pass = compare(have, operator, want)
+        didPass = compare(have, operator, want)
 	}
-    if !pass {
+    return self.hadResult(didPass, test, func(){
         self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
-        self.TestingT.Fail()
-        return false
-    }
-	return true
+    })
 }
 
 // Compare 
@@ -207,15 +215,12 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 }
 
 func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
-    test := newTest("Compare", callDepth+1, left, right, arguments)
+    test := newTest("Compare " + operator, callDepth+1, left, right, arguments)
     test.operator = operator
-    pass := compare(left, operator, right)
-    if !pass {
+    didPass := compare(left, operator, right)
+    return self.hadResult(didPass, test, func(){
         self.Log(self.failMessageForCompare(test))
-        self.TestingT.Fail()
-        return false
-    }
-    return false
+    })
 }
 
 func compare(left interface{}, operator string, right interface{}) bool {
@@ -441,9 +446,9 @@ func (self *Tester) failMessageForCompare(test *aTest) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
+                  %s
                        %s
-                       %s
-                       %s
+                  %s
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), test.operator, ToString(test.want))
 }
 
@@ -461,16 +466,18 @@ func (self *Tester) failMessageForIs(test *aTest) string {
 }
 
 func (self *Tester) failMessageForLike(test *aTest, have, want string, wantLike bool) string {
-	expect := "unlike"
+	/*expect := "unlike"*/
 	if !wantLike {
-		expect = "  like"
+		/*expect = "  like"*/
 	}
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   got: %s
-               %s: %s
-    `, test.file, test.line, test.Description(), test.kind, have, expect, want)
+             expected: %s
+    `, test.file, test.line, test.Description(), test.kind, have, want)
+               /*%s: %s*/
+    /*`, test.file, test.line, test.Description(), test.kind, have, expect, want)*/
 }
 
 // ...
@@ -560,6 +567,10 @@ func (self *Tester) Log(moreOutput string) {
 	output := outputValue.Bytes()
 	output = append(output, moreOutput...)
 	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output
+}
+
+func (self *Tester) fail() {
+    self.TestingT.Fail()
 }
 
 // Conversion
