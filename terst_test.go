@@ -20,7 +20,7 @@ func TestPass(t *testing.T) {
     Compare(1, "==", 1)
     Compare("abc", ">=", "abc")
     Compare(math.Inf(0), ">", 2)
-    Like(1, 1.1)
+	Like("apple", `pp`)
 }
 
 func TestFail(t *testing.T) {

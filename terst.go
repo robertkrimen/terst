@@ -21,7 +21,7 @@ var (
 func (self *Tester) hadResult(result bool, test *aTest, onFail func()) bool {
     if isTesting {
         if expectResult != result {
-            self.Log(fmt.Sprintf("Expect %v but got %v\n", expectResult, result))
+            self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expectResult, result, test.kind, test.have, test.want))
             onFail()
             self.fail()
         }
@@ -191,14 +191,15 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 			panic("regexp.Match(" + want0 + ", ...): " + error.Error())
 		}
         want = fmt.Sprintf("(?:%v)", want) // Make it look like a regular expression
-
-    default:
-        operator := "=="
-        if !wantLike {
-            operator = "!="
-        }
-        didPass = compare(have, operator, want)
-	}
+        return self.hadResult(didPass, test, func(){
+            self.Log(self.failMessageForMatch(test, ToString(have), ToString(want), wantLike))
+        })
+    }
+    operator := "=="
+    if !wantLike {
+        operator = "!="
+    }
+    didPass = compare(have, operator, want)
     return self.hadResult(didPass, test, func(){
         self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
     })
@@ -465,10 +466,22 @@ func (self *Tester) failMessageForIs(test *aTest) string {
     `, test.file, test.line, test.Description(), test.kind, test.have, test.want)
 }
 
+func (self *Tester) failMessageForMatch(test *aTest, have, want string, wantMatch bool) string {
+    expect := "  like"
+	if !wantMatch {
+        expect = "unlike"
+	}
+	return self.FormatMessage(`
+        %s:%d: %s 
+           Failed test (%s)
+                  got: %s
+               %s: %s
+    `, test.file, test.line, test.Description(), test.kind, have, expect, want)
+}
+
 func (self *Tester) failMessageForLike(test *aTest, have, want string, wantLike bool) string {
-	/*expect := "unlike"*/
 	if !wantLike {
-		/*expect = "  like"*/
+        want = "Anything else"
 	}
 	return self.FormatMessage(`
         %s:%d: %s 
@@ -476,8 +489,6 @@ func (self *Tester) failMessageForLike(test *aTest, have, want string, wantLike 
                   got: %s
              expected: %s
     `, test.file, test.line, test.Description(), test.kind, have, want)
-               /*%s: %s*/
-    /*`, test.file, test.line, test.Description(), test.kind, have, expect, want)*/
 }
 
 // ...
