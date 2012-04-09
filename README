@@ -25,4 +25,3 @@ AUTHOR
 
 FUTURE
 - Add #=, #~, #* strictness tweaking to Compare
-- Is/IsNot should coerce have to string if want is string
