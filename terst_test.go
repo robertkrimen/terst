@@ -12,6 +12,7 @@ func init() {
 
 func TestPass(t *testing.T) {
 	Terst(t)
+    defer UnTerst()
     expectResult = true
     Is(1, 1)
     Compare(1, "==", 1.0)

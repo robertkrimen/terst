@@ -499,8 +499,12 @@ type Tester struct {
 
 var _ourTester *Tester = nil
 
-func Terst(t *testing.T) *Tester {
-	_ourTester = NewTester(t)
+func Terst(arguments ...interface{}) *Tester {
+    if len(arguments) == 0 {
+        _ourTester = nil
+    } else {
+	    _ourTester = NewTester(arguments[0].(*testing.T))
+    }
 	return _ourTester
 }
 
