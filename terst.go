@@ -14,6 +14,8 @@ import (
 )
 
 var (
+    SanityCheck bool = true
+
     expectResult bool
     isTesting bool = false
 )
@@ -495,15 +497,39 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 
 type Tester struct {
 	TestingT *testing.T
+    TestEntry uintptr
+    sanityCheck bool
 }
 
 var _ourTester *Tester = nil
+
+func testFunctionEntry() uintptr {
+    height := 2
+    for {
+	    functionPC, _, _, good := runtime.Caller(height)
+	    function := runtime.FuncForPC(functionPC)
+	    functionName := function.Name()
+        if !good {
+            return 0
+        }
+		if index := strings.LastIndex(functionName, ".Test"); index >= 0 {
+            // Assume we have an instance of TestXyzzy in a _test file
+            return function.Entry()
+		}
+        height += 1
+    }
+    return 0
+}
 
 func Terst(arguments ...interface{}) *Tester {
     if len(arguments) == 0 {
         _ourTester = nil
     } else {
 	    _ourTester = NewTester(arguments[0].(*testing.T))
+        _ourTester.sanityCheck = SanityCheck
+        if _ourTester.sanityCheck {
+            _ourTester.TestEntry = testFunctionEntry()
+        }
     }
 	return _ourTester
 }
@@ -516,16 +542,48 @@ func OurTester() *Tester {
 	if _ourTester == nil {
 		panic("_ourTester == nil")
 	}
-	return _ourTester
+	return _ourTester.checkSanity()
 }
 
 func HaveTester() bool {
 	return _ourTester != nil
 }
 
+// Tester
+
 func NewTester(t *testing.T) *Tester {
-	return &Tester{t}
+	return &Tester{t, 0, true}
 }
+
+func (self *Tester) FormatMessage(format string, arguments ...interface{}) string {
+	message := fmt.Sprintf(format, arguments...)
+	message = strings.TrimLeft(message, "\n")
+	message = strings.TrimRight(message, " \n")
+	return message + "\n\n"
+}
+
+func (self *Tester) Log(moreOutput string) {
+	outputValue := reflect.ValueOf(self.TestingT).Elem().FieldByName("output")
+	output := outputValue.Bytes()
+	output = append(output, moreOutput...)
+	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output
+}
+
+func (self *Tester) fail() {
+    self.TestingT.Fail()
+}
+
+func (self *Tester) checkSanity() *Tester {
+    if self.sanityCheck && self.TestEntry != 0 {
+        foundEntry := testFunctionEntry()
+        if self.TestEntry != foundEntry {
+            panic(fmt.Errorf("TestEntry(%v) does not match foundEntry(%v): Did you call Terst when entering a new Test* function?", self.TestEntry, foundEntry))
+        }
+    }
+    return self
+}
+
+// test
 
 type test struct {
 	kind      string
@@ -572,24 +630,6 @@ func AtFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
 		line = 1
 	}
 	return file, line, functionPC, function, good
-}
-
-func (self *Tester) FormatMessage(format string, arguments ...interface{}) string {
-	message := fmt.Sprintf(format, arguments...)
-	message = strings.TrimLeft(message, "\n")
-	message = strings.TrimRight(message, " \n")
-	return message + "\n\n"
-}
-
-func (self *Tester) Log(moreOutput string) {
-	outputValue := reflect.ValueOf(self.TestingT).Elem().FieldByName("output")
-	output := outputValue.Bytes()
-	output = append(output, moreOutput...)
-	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output
-}
-
-func (self *Tester) fail() {
-    self.TestingT.Fail()
 }
 
 // Conversion
