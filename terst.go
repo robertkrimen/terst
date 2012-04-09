@@ -7,6 +7,9 @@ import (
     "runtime"
     "strings"
     "unsafe"
+    "strconv"
+    "math"
+    "regexp"
 )
 
 // Is
@@ -27,6 +30,16 @@ func IsNot(have, want interface{}, arguments ...interface{}) bool {
 
 func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool {
     return self.AtIsNot(1, have, want, arguments...)
+}
+
+// Like
+
+func Like(have, want interface{}, arguments ...interface{}) bool {
+    return OurTester().AtLike(1, have, want, arguments...)
+}
+
+func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool {
+    return self.AtLike(1, have, want, arguments...)
 }
 
 // ...
@@ -55,6 +68,17 @@ func HaveTester() bool {
 
 func NewTester(t *testing.T) *Tester {
     return &Tester{t}
+}
+
+type _Test struct {
+    callDepth int
+    have interface{}
+    want interface{}
+    arguments []interface{}
+}
+
+func newTest(have, want interface{}, arguments ...interface{}) *_Test {
+    return &_Test{0, have, want, arguments}
 }
 
 func (self *Tester) AtFileLineFunction(callDepth int) (string, int, string) {
@@ -95,10 +119,29 @@ func (self *Tester) AtFailMessage(callDepth int, kind string, have, want interfa
     return message + "\n\n"
 }
 
+func (self *Tester) AtFailMessageForMatch(callDepth int, kind string, have, want string, arguments ...interface{}) string {
+    file, line, _ := self.AtFileLineFunction(callDepth + 1)
+
+    description := ""
+    if len(arguments) > 0 {
+        description = fmt.Sprintf("%s", arguments...)
+    }
+
+    message := fmt.Sprintf(`
+        %s:%d: %s 
+           Failed test (%s)
+                  got: %s
+             expected: %s
+    `, file, line, description, kind, have, want)
+    message = strings.TrimLeft(message, "\n")
+    message = strings.TrimRight(message, " \n")
+    return message + "\n\n"
+}
+
 func (self *Tester) Log(moreOutput string) {
     outputValue := reflect.ValueOf(self.TestingT).Elem().FieldByName("output")
     output := outputValue.Bytes()
-    output = append( output, moreOutput... )
+    output = append(output, moreOutput...)
     *(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output;
 }
 
@@ -122,4 +165,41 @@ func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...
     return true
 }
 
+func ToString(value interface{}) string {
+    switch value0 := value.(type) {
+        case bool:
+            return strconv.FormatBool(value0)
+        case int, int8, int16, int32, int64:
+        case uint, uint8, uint16, uint32, uint64:
+            return value0.(string)
+        case float32:
+            return strconv.FormatFloat(float64(value0), 'd', -1, 32)
+        case float64:
+            if math.IsNaN(value0) {
+                return "NaN"
+            } else if math.IsInf(value0, 0) {
+                return "Infinity"
+            }
+            return strconv.FormatFloat(float64(value0), 'd', -1, 64)
+        case string:
+            return value0
+    }
+    return reflect.ValueOf(value).String()
+}
 
+func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+    switch want0 := want.(type) {
+    case string:
+        haveString := ToString(have)
+        pass, error := regexp.Match(want0, []byte(haveString))
+        if error != nil {
+            panic("regexp.Match(" + want0 + ", ...): " + error.Error())
+        }
+        if (!pass) {
+            self.Log(self.AtFailMessage(callDepth + 1, "Like", have, want, arguments...))
+            self.TestingT.Fail()
+            return false
+        }
+    }
+    return true
+}
