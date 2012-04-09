@@ -70,27 +70,27 @@ func NewTester(t *testing.T) *Tester {
     return &Tester{t}
 }
 
-type _Test struct {
+type aTest struct {
     callDepth int
     have interface{}
     want interface{}
     arguments []interface{}
 }
 
-func newTest(callDepth int, have, want interface{}, arguments ...interface{}) *_Test {
-    return &_Test{callDepth, have, want, arguments}
+func newTest(callDepth int, have, want interface{}, arguments ...interface{}) *aTest {
+    return &aTest{callDepth, have, want, arguments}
 }
 
-func (self *_Test) Sink() *_Test {
+func (self *aTest) Sink() *aTest {
     test := *self
     return &test
 }
 
-func (self *_Test) AtFileLineFunction() (string, int, string) {
+func (self *aTest) AtFileLineFunction() (string, int, string) {
     return AtFileLineFunction(self.callDepth + 1)
 }
 
-func (self *_Test) Description() string {
+func (self *aTest) Description() string {
     description := ""
     if len(self.arguments) > 0 {
         description = fmt.Sprintf("%s", self.arguments...)
@@ -117,7 +117,7 @@ func AtFileLineFunction(callDepth int) (string, int, string) {
     return file, line, function
 }
 
-func (self *Tester) AtFailMessage(test *_Test, kind string) string {
+func (self *Tester) AtFailMessage(test *aTest, kind string) string {
     file, line, _ := test.AtFileLineFunction()
     description := test.Description()
 
