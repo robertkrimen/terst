@@ -3,6 +3,7 @@ package terst
 import (
 	"testing"
     "fmt"
+    "math"
 )
 
 func Test(t *testing.T) {
@@ -24,4 +25,5 @@ func Test(t *testing.T) {
     Compare("abcd", "<", "abc")
     Compare("ab", ">=", "abc")
     Compare("abc", ">=", "abc")
+    Compare(math.Inf(0), ">", 2)
 }

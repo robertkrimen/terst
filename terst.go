@@ -3,6 +3,7 @@ package terst
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -195,7 +196,10 @@ func LessThanInteger(left int64, right interface{}) bool {
     case int, int8, int16, int32, int64:
         return left < integerValue(right)
     case uint, uint8, uint16, uint32, uint64:
-        return left < int64(unsignedIntegerValue(right))
+        bigLeft := big.NewInt(left)
+        bigRight := big.NewInt(0)
+        bigRight.SetString(fmt.Sprintf("%v", right), 10)
+        return bigLeft.Cmp(bigRight) == -1
     case float32, float64:
         return float64(left) < floatValue(right)
     }
@@ -205,7 +209,10 @@ func LessThanInteger(left int64, right interface{}) bool {
 func LessThanUnsignedInteger(left uint64, right interface{}) bool {
     switch right.(type) {
     case int, int8, int16, int32, int64:
-        return left < uint64(integerValue(right))
+        bigLeft := big.NewInt(0)
+        bigLeft.SetString(fmt.Sprintf("%v", left), 10)
+        bigRight := big.NewInt(integerValue(right))
+        return bigLeft.Cmp(bigRight) == -1
     case uint, uint8, uint16, uint32, uint64:
         return left < unsignedIntegerValue(right)
     case float32, float64:
@@ -253,7 +260,10 @@ func LessThanOrEqualInteger(left int64, right interface{}) bool {
     case int, int8, int16, int32, int64:
         return left <= integerValue(right)
     case uint, uint8, uint16, uint32, uint64:
-        return left <= int64(unsignedIntegerValue(right))
+        bigLeft := big.NewInt(left)
+        bigRight := big.NewInt(0)
+        bigRight.SetString(fmt.Sprintf("%v", right), 10)
+        return bigLeft.Cmp(bigRight) <= 0
     case float32, float64:
         return float64(left) <= floatValue(right)
     }
@@ -263,7 +273,10 @@ func LessThanOrEqualInteger(left int64, right interface{}) bool {
 func LessThanOrEqualUnsignedInteger(left uint64, right interface{}) bool {
     switch right.(type) {
     case int, int8, int16, int32, int64:
-        return left <= uint64(integerValue(right))
+        bigLeft := big.NewInt(0)
+        bigLeft.SetString(fmt.Sprintf("%v", left), 10)
+        bigRight := big.NewInt(integerValue(right))
+        return bigLeft.Cmp(bigRight) <= 0
     case uint, uint8, uint16, uint32, uint64:
         return left <= unsignedIntegerValue(right)
     case float32, float64:
