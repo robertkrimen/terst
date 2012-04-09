@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"strconv"
+	/*"strconv"*/
 	"strings"
 	"testing"
 	"unsafe"
@@ -199,9 +199,9 @@ func (self *Tester) failMessageForCompare(test *aTest) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-           (%s)
            %s
-           (%s)
+           %s
+           %s
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), test.operator, ToString(test.want))
 }
 
@@ -320,22 +320,18 @@ func (self *Tester) Log(moreOutput string) {
 func ToString(value interface{}) string {
 	switch value0 := value.(type) {
 	case bool:
-		return strconv.FormatBool(value0)
-	case int, int8, int16, int32, int64:
-		return strconv.FormatInt(value0, 10)
-	case uint, uint8, uint16, uint32, uint64:
-		return strconv.FormatUint(value0, 10)
-	case float32:
-		return strconv.FormatFloat(float64(value0), 'd', -1, 32)
-	case float64:
+    case int, int8, int16, int32, int64:
+    case uint, uint8, uint16, uint32, uint64:
+	case string:
+    case float32:
+		return fmt.Sprintf("%v", value)
+    case float64:
 		if math.IsNaN(value0) {
 			return "NaN"
 		} else if math.IsInf(value0, 0) {
 			return "Infinity"
 		}
-		return strconv.FormatFloat(float64(value0), 'd', -1, 64)
-	case string:
-		return value0
+		return fmt.Sprintf("%v", value)
 	}
-	return reflect.ValueOf(value).String()
+    return fmt.Sprintf("%v", value)
 }

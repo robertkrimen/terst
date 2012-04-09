@@ -11,5 +11,5 @@ func Test(t *testing.T) {
 	Unlike("apple", `pp`)
 	Pass(false)
 	Fail(true)
-    Compare(1, "==", 2)
+    Compare(int64(1), "==", 2)
 }
