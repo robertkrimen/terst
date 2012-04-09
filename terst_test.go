@@ -8,5 +8,5 @@ func Test(t *testing.T) {
     WithTester(t)
     Is("apple", "apple")
     IsNot("apple", "orange")
-    Like("apple", `pp`)
+    Like("aple", `pp`)
 }

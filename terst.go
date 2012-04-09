@@ -77,11 +77,28 @@ type _Test struct {
     arguments []interface{}
 }
 
-func newTest(have, want interface{}, arguments ...interface{}) *_Test {
-    return &_Test{0, have, want, arguments}
+func newTest(callDepth int, have, want interface{}, arguments ...interface{}) *_Test {
+    return &_Test{callDepth, have, want, arguments}
 }
 
-func (self *Tester) AtFileLineFunction(callDepth int) (string, int, string) {
+func (self *_Test) Sink() *_Test {
+    test := *self
+    return &test
+}
+
+func (self *_Test) AtFileLineFunction() (string, int, string) {
+    return AtFileLineFunction(self.callDepth + 1)
+}
+
+func (self *_Test) Description() string {
+    description := ""
+    if len(self.arguments) > 0 {
+        description = fmt.Sprintf("%s", self.arguments...)
+    }
+    return description
+}
+
+func AtFileLineFunction(callDepth int) (string, int, string) {
     functionPC, file, line, good := runtime.Caller(callDepth + 1)
     function := runtime.FuncForPC(functionPC).Name()
     if (good) {
@@ -100,27 +117,24 @@ func (self *Tester) AtFileLineFunction(callDepth int) (string, int, string) {
     return file, line, function
 }
 
-func (self *Tester) AtFailMessage(callDepth int, kind string, have, want interface{}, arguments ...interface{}) string {
-    file, line, _ := self.AtFileLineFunction(callDepth + 1)
-
-    description := ""
-    if len(arguments) > 0 {
-        description = fmt.Sprintf("%s", arguments...)
-    }
+func (self *Tester) AtFailMessage(test *_Test, kind string) string {
+    file, line, _ := test.AtFileLineFunction()
+    description := test.Description()
 
     message := fmt.Sprintf(`
         %s:%d: %s 
            Failed test (%s)
                   got: %s
              expected: %s
-    `, file, line, description, kind, have, want)
+    `, file, line, description, kind, test.have, test.want)
     message = strings.TrimLeft(message, "\n")
     message = strings.TrimRight(message, " \n")
     return message + "\n\n"
 }
 
+
 func (self *Tester) AtFailMessageForMatch(callDepth int, kind string, have, want string, arguments ...interface{}) string {
-    file, line, _ := self.AtFileLineFunction(callDepth + 1)
+    file, line, _ := AtFileLineFunction(callDepth + 1)
 
     description := ""
     if len(arguments) > 0 {
@@ -146,9 +160,10 @@ func (self *Tester) Log(moreOutput string) {
 }
 
 func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+    test := newTest(callDepth, have, want, arguments)
 	pass := have == want
     if (!pass) {
-        self.Log(self.AtFailMessage(callDepth + 1, "Is", have, want, arguments...))
+        self.Log(self.AtFailMessage(test, "Is"))
         self.TestingT.Fail()
         return false
     }
@@ -156,9 +171,10 @@ func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...int
 }
 
 func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+    test := newTest(callDepth, have, want, arguments)
 	pass := have != want
     if (!pass) {
-        self.Log(self.AtFailMessage(callDepth + 1, "IsNot", have, "Anything else", arguments...))
+        self.Log(self.AtFailMessage(test, "IsNot"))
         self.TestingT.Fail()
         return false
     }
@@ -188,6 +204,7 @@ func ToString(value interface{}) string {
 }
 
 func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+    test := newTest(callDepth, have, want, arguments)
     switch want0 := want.(type) {
     case string:
         haveString := ToString(have)
@@ -196,7 +213,7 @@ func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...i
             panic("regexp.Match(" + want0 + ", ...): " + error.Error())
         }
         if (!pass) {
-            self.Log(self.AtFailMessage(callDepth + 1, "Like", have, want, arguments...))
+            self.Log(self.AtFailMessage(test.Sink(), "Like"))
             self.TestingT.Fail()
             return false
         }
