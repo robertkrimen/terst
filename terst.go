@@ -100,37 +100,45 @@ func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...
 // Like
 
 func Like(have, want interface{}, arguments ...interface{}) bool {
-    return OurTester().AtLike(true, 1, have, want, arguments...)
+    return OurTester().AtLike(1, have, want, arguments...)
 }
 
 func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool {
-    return self.AtLike(true, 1, have, want, arguments...)
+    return self.AtLike(1, have, want, arguments...)
+}
+
+func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+    return self.atLikeOrUnlike(true, 1, have, want, arguments...)
 }
 
 // Unlike
 
 func Unlike(have, want interface{}, arguments ...interface{}) bool {
-    return OurTester().AtLike(false, 1, have, want, arguments...)
+    return OurTester().AtUnlike(1, have, want, arguments...)
 }
 
 func (self *Tester) Unlike(have, want interface{}, arguments ...interface{}) bool {
-    return self.AtLike(false, 1, have, want, arguments...)
+    return self.AtUnlike(1, have, want, arguments...)
 }
 
-func (self *Tester) AtLike(wantMatch bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
+func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+    return self.atLikeOrUnlike(false, 1, have, want, arguments...)
+}
+
+func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
     test := newTest("Like", callDepth + 1, have, want, arguments)
     switch want0 := want.(type) {
     case string:
         haveString := ToString(have)
         pass, error := regexp.Match(want0, []byte(haveString))
-        if !wantMatch {
+        if !wantLike {
             pass = !pass
         }
         if error != nil {
             panic("regexp.Match(" + want0 + ", ...): " + error.Error())
         }
         if (!pass) {
-            self.Log(self.failMessageForMatch(test, haveString, want0, wantMatch))
+            self.Log(self.failMessageForMatch(test, haveString, want0, wantLike))
             self.TestingT.Fail()
             return false
         }
