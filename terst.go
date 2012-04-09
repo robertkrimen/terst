@@ -56,6 +56,48 @@ func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments 
 	return true
 }
 
+// Equal
+
+func Equal(have, want interface{}, arguments ...interface{}) bool {
+	return OurTester().AtEqual(1, have, want, arguments...)
+}
+
+func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool {
+	return self.AtEqual(1, have, want, arguments...)
+}
+
+func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+	test := newTest("==", callDepth+1, have, want, arguments)
+	pass := have == want
+	if !pass {
+		self.Log(self.failMessageForEqual(test))
+		self.TestingT.Fail()
+		return false
+	}
+	return true
+}
+
+// Unequal
+
+func Unequal(have, want interface{}, arguments ...interface{}) bool {
+	return OurTester().AtUnequal(1, have, want, arguments...)
+}
+
+func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bool {
+	return self.AtUnequal(1, have, want, arguments...)
+}
+
+func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+	test := newTest("!=", callDepth+1, have, want, arguments)
+	pass := have != want
+	if !pass {
+		self.Log(self.failMessageForIs(test))
+		self.TestingT.Fail()
+		return false
+	}
+	return true
+}
+
 // Is
 
 func Is(have, want interface{}, arguments ...interface{}) bool {
@@ -157,17 +199,34 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 	return self.AtCompare(1, have, operator, want, arguments...)
 }
 
-func integerValue(value interface{}) int64 {
-    return reflect.ValueOf(value).Int()
+func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
+    test := newTest("Compare", callDepth+1, left, right, arguments)
+    test.operator = operator
+    pass := true
+    switch operator {
+    case "==":
+        pass = left == right
+    case "!=":
+        pass = left != right
+    case "<":
+        pass = LessThan(left, right)
+    case "<=":
+        pass = LessThanOrEqual(left, right)
+    case ">":
+        pass = !LessThanOrEqual(left, right)
+    case ">=":
+        pass = !LessThan(left, right)
+    default:
+        panic("Compare operator (" + operator + ") is invalid")
+    }
+    if !pass {
+        self.Log(self.failMessageForCompare(test))
+        self.TestingT.Fail()
+        return false
+    }
+    return false
 }
-
-func unsignedIntegerValue(value interface{}) uint64 {
-    return reflect.ValueOf(value).Uint()
-}
-
-func floatValue(value interface{}) float64 {
-    return reflect.ValueOf(value).Float()
-}
+// Compare / LessThan
 
 func LessThan(left interface{}, right interface{}) bool {
     switch left.(type) {
@@ -297,34 +356,6 @@ func LessThanOrEqualFloat(left float64, right interface{}) bool {
     panic("LessThanOrEqualFloat")
 }
 
-func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
-    test := newTest("Compare", callDepth+1, left, right, arguments)
-    test.operator = operator
-    pass := true
-    switch operator {
-    case "==":
-        pass = left == right
-    case "!=":
-        pass = left != right
-    case "<":
-        pass = LessThan(left, right)
-    case "<=":
-        pass = LessThanOrEqual(left, right)
-    case ">":
-        pass = !LessThanOrEqual(left, right)
-    case ">=":
-        pass = !LessThan(left, right)
-    default:
-        panic("Compare operator (" + operator + ") is invalid")
-    }
-    if !pass {
-        self.Log(self.failMessageForCompare(test))
-        self.TestingT.Fail()
-        return false
-    }
-    return false
-}
-
 // failMessage*
 
 func (self *Tester) failMessageForPass(test *aTest) string {
@@ -344,6 +375,10 @@ func (self *Tester) failMessageForCompare(test *aTest) string {
            %s
            %s
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), test.operator, ToString(test.want))
+}
+
+func (self *Tester) failMessageForEqual(test *aTest) string {
+    return self.failMessageForIs(test)
 }
 
 func (self *Tester) failMessageForIs(test *aTest) string {
@@ -456,6 +491,20 @@ func (self *Tester) Log(moreOutput string) {
 	output := outputValue.Bytes()
 	output = append(output, moreOutput...)
 	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output
+}
+
+// Conversion
+
+func integerValue(value interface{}) int64 {
+    return reflect.ValueOf(value).Int()
+}
+
+func unsignedIntegerValue(value interface{}) uint64 {
+    return reflect.ValueOf(value).Uint()
+}
+
+func floatValue(value interface{}) float64 {
+    return reflect.ValueOf(value).Float()
 }
 
 func ToString(value interface{}) string {
