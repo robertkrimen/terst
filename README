@@ -21,6 +21,61 @@ SYNOPSIS
         Like(1, 1.0) // Pass
     }
 
+USAGE
+
+    Equal( have interface{}, want interface{} )
+        Test have against want via ==
+
+    Unequal( ... )
+        Same behavior as with Equal but with the opposite result
+
+    Pass( result bool )
+        Passing is if result is true 
+
+    Fail( result bool )
+        Passing is if result is false 
+
+    Is( have interface{}, want string )
+        Convert have to a string (via fmt.Sprintf("%v")) and test against want via ==
+
+    Is( have interface{}, want interface{} )
+        Test have against want via ==
+
+    IsNot( ... )
+        Same behavior as with Is but with the opposite result
+
+    Like( have interface{}, want string )
+        A regular expression test. Convert have to a string (via fmt.Sprintf("%v"))
+        and test against the regular expression specified by want
+        A match is passing
+
+    Like( have interface{}, want interface{} )
+        A shortcut for: Compare( have, "==", want )
+
+    Unike( have interface{}, want string )
+        Same behavior as with Like but with the opposite result
+
+    Unlike( have interface{}, want interface{} )
+        A shortcut for: Compare( have, "!=", want )
+
+    Compare( have interface{}, operator string, want interface{} )
+        Compare have to want using the specified operator
+        The operator can be one of the following:
+            ==
+            !=
+            <
+            <=
+            >
+            >=
+
+        Compare is not strict when comparing numeric types, and
+        will make a best effort to promote have and want to the
+        same type
+
+    * Each of the methods above can take one additional (optional) argument,
+    which is a string describing the test. If the test fails, this
+    description will be included with the test output
+
 AUTHOR
     Robert Krimen <robertkrimen@gmail.com>
 
