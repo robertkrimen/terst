@@ -18,7 +18,7 @@ var (
     isTesting bool = false
 )
 
-func (self *Tester) hadResult(result bool, test *aTest, onFail func()) bool {
+func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
     if isTesting {
         if expectResult != result {
             self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expectResult, result, test.kind, test.have, test.want))
@@ -434,7 +434,7 @@ func newComparator(left interface{}, right interface{}) ofComparator {
 
 // failMessage*
 
-func (self *Tester) failMessageForPass(test *aTest) string {
+func (self *Tester) failMessageForPass(test *test) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
@@ -443,7 +443,7 @@ func (self *Tester) failMessageForPass(test *aTest) string {
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), ToString(test.want))
 }
 
-func (self *Tester) failMessageForCompare(test *aTest) string {
+func (self *Tester) failMessageForCompare(test *test) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
@@ -453,11 +453,11 @@ func (self *Tester) failMessageForCompare(test *aTest) string {
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), test.operator, ToString(test.want))
 }
 
-func (self *Tester) failMessageForEqual(test *aTest) string {
+func (self *Tester) failMessageForEqual(test *test) string {
     return self.failMessageForIs(test)
 }
 
-func (self *Tester) failMessageForIs(test *aTest) string {
+func (self *Tester) failMessageForIs(test *test) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
@@ -466,7 +466,7 @@ func (self *Tester) failMessageForIs(test *aTest) string {
     `, test.file, test.line, test.Description(), test.kind, test.have, test.want)
 }
 
-func (self *Tester) failMessageForMatch(test *aTest, have, want string, wantMatch bool) string {
+func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch bool) string {
     expect := "  like"
 	if !wantMatch {
         expect = "unlike"
@@ -479,7 +479,7 @@ func (self *Tester) failMessageForMatch(test *aTest, have, want string, wantMatc
     `, test.file, test.line, test.Description(), test.kind, have, expect, want)
 }
 
-func (self *Tester) failMessageForLike(test *aTest, have, want string, wantLike bool) string {
+func (self *Tester) failMessageForLike(test *test, have, want string, wantLike bool) string {
 	if !wantLike {
         want = "Anything else"
 	}
@@ -499,9 +499,13 @@ type Tester struct {
 
 var _ourTester *Tester = nil
 
-func WithTester(t *testing.T) *Tester {
+func Terst(t *testing.T) *Tester {
 	_ourTester = NewTester(t)
 	return _ourTester
+}
+
+func UnTerst() {
+    _ourTester = nil
 }
 
 func OurTester() *Tester {
@@ -519,7 +523,7 @@ func NewTester(t *testing.T) *Tester {
 	return &Tester{t}
 }
 
-type aTest struct {
+type test struct {
 	kind      string
 	have      interface{}
 	want      interface{}
@@ -532,13 +536,13 @@ type aTest struct {
 	function   string
 }
 
-func newTest(kind string, callDepth int, have, want interface{}, arguments ...interface{}) *aTest {
+func newTest(kind string, callDepth int, have, want interface{}, arguments ...interface{}) *test {
 	file, line, functionPC, function, _ := AtFileLineFunction(callDepth + 1)
     operator := ""
-	return &aTest{kind, have, want, arguments, operator, file, line, functionPC, function}
+	return &test{kind, have, want, arguments, operator, file, line, functionPC, function}
 }
 
-func (self *aTest) Description() string {
+func (self *test) Description() string {
 	description := ""
 	if len(self.arguments) > 0 {
 		description = fmt.Sprintf("%s", self.arguments...)

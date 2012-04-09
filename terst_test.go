@@ -11,7 +11,7 @@ func init() {
 }
 
 func TestPass(t *testing.T) {
-	WithTester(t)
+	Terst(t)
     expectResult = true
     Is(1, 1)
     Compare(1, "==", 1.0)
@@ -24,7 +24,7 @@ func TestPass(t *testing.T) {
 }
 
 func TestFail(t *testing.T) {
-	WithTester(t)
+    Terst(t)
     expectResult = false
 	Unlike("apple", `pp`)
     Like(1, 1.1);
