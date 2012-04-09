@@ -156,6 +156,134 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 	return self.AtCompare(1, have, operator, want, arguments...)
 }
 
+func integerValue(value interface{}) int64 {
+    return reflect.ValueOf(value).Int()
+}
+
+func unsignedIntegerValue(value interface{}) uint64 {
+    return reflect.ValueOf(value).Uint()
+}
+
+func floatValue(value interface{}) float64 {
+    return reflect.ValueOf(value).Float()
+}
+
+func LessThan(left interface{}, right interface{}) bool {
+    switch left.(type) {
+    case int, int8, int16, int32, int64:
+        return LessThanInteger(integerValue(left), right)
+    case uint, uint8, uint16, uint32, uint64:
+        return LessThanUnsignedInteger(unsignedIntegerValue(left), right)
+    case float32, float64:
+        return LessThanFloat(floatValue(left), right)
+    case string:
+        return LessThanString(left.(string), right)
+    }
+    panic("LessThanOrEqual")
+}
+
+func LessThanString(left string, right interface{}) bool {
+    switch right.(type) {
+    case string:
+        return left < right.(string)
+    }
+    panic("LessThanString")
+}
+
+func LessThanInteger(left int64, right interface{}) bool {
+    switch right.(type) {
+    case int, int8, int16, int32, int64:
+        return left < integerValue(right)
+    case uint, uint8, uint16, uint32, uint64:
+        return left < int64(unsignedIntegerValue(right))
+    case float32, float64:
+        return float64(left) < floatValue(right)
+    }
+    panic("LessThanInteger")
+}
+
+func LessThanUnsignedInteger(left uint64, right interface{}) bool {
+    switch right.(type) {
+    case int, int8, int16, int32, int64:
+        return left < uint64(integerValue(right))
+    case uint, uint8, uint16, uint32, uint64:
+        return left < unsignedIntegerValue(right)
+    case float32, float64:
+        return float64(left) < floatValue(right)
+    }
+    panic("LessThanUnsignedInteger")
+}
+
+func LessThanFloat(left float64, right interface{}) bool {
+    switch right.(type) {
+    case int, int8, int16, int32, int64:
+        return left < float64(integerValue(right))
+    case uint, uint8, uint16, uint32, uint64:
+        return left < float64(unsignedIntegerValue(right))
+    case float32, float64:
+        return left < floatValue(right)
+    }
+    panic("LessThanFloat")
+}
+
+func LessThanOrEqual(left interface{}, right interface{}) bool {
+    switch left.(type) {
+    case int, int8, int16, int32, int64:
+        return LessThanOrEqualInteger(integerValue(left), right)
+    case uint, uint8, uint16, uint32, uint64:
+        return LessThanOrEqualUnsignedInteger(unsignedIntegerValue(left), right)
+    case float32, float64:
+        return LessThanOrEqualFloat(floatValue(left), right)
+    case string:
+        return LessThanOrEqualString(left.(string), right)
+    }
+    panic("LessThanOrEqual")
+}
+
+func LessThanOrEqualString(left string, right interface{}) bool {
+    switch right.(type) {
+    case string:
+        return left <= right.(string)
+    }
+    panic("LessThanOrEqualString")
+}
+
+func LessThanOrEqualInteger(left int64, right interface{}) bool {
+    switch right.(type) {
+    case int, int8, int16, int32, int64:
+        return left <= integerValue(right)
+    case uint, uint8, uint16, uint32, uint64:
+        return left <= int64(unsignedIntegerValue(right))
+    case float32, float64:
+        return float64(left) <= floatValue(right)
+    }
+    panic("LessThanOrEqualInteger")
+}
+
+func LessThanOrEqualUnsignedInteger(left uint64, right interface{}) bool {
+    switch right.(type) {
+    case int, int8, int16, int32, int64:
+        return left <= uint64(integerValue(right))
+    case uint, uint8, uint16, uint32, uint64:
+        return left <= unsignedIntegerValue(right)
+    case float32, float64:
+        return float64(left) < floatValue(right)
+    }
+    panic("LessThanOrEqualUnsignedInteger")
+}
+
+func LessThanOrEqualFloat(left float64, right interface{}) bool {
+    switch right.(type) {
+    case int, int8, int16, int32, int64:
+        return left <= float64(integerValue(right))
+    case uint, uint8, uint16, uint32, uint64:
+        return left <= float64(unsignedIntegerValue(right))
+    case float32, float64:
+        return left <= floatValue(right)
+    }
+    panic("LessThanOrEqualFloat")
+}
+
 func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
     test := newTest("Compare", callDepth+1, left, right, arguments)
     test.operator = operator
@@ -165,14 +293,14 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
         pass = left == right
     case "!=":
         pass = left != right
-    /*case "<":*/
-    /*    pass = left < right*/
-    /*case "<=":*/
-    /*    pass = left <= right*/
-    /*case ">":*/
-    /*    pass = left > right*/
-    /*case ">=":*/
-    /*    pass = left >= right*/
+    case "<":
+        pass = LessThan(left, right)
+    case "<=":
+        pass = LessThanOrEqual(left, right)
+    case ">":
+        pass = !LessThanOrEqual(left, right)
+    case ">=":
+        pass = !LessThan(left, right)
     default:
         panic("Compare operator (" + operator + ") is invalid")
     }
