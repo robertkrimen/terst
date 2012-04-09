@@ -75,16 +75,15 @@ type aTest struct {
     want interface{}
     arguments []interface{}
 
-    functionPC uintptr
-    function string
     file string
     line int
-
+    functionPC uintptr
+    function string
 }
 
 func newTest(callDepth int, have, want interface{}, arguments ...interface{}) *aTest {
-    functionPC, file, line, function, _ := AtPCFileLineFunction(callDepth + 1)
-    return &aTest{have, want, arguments, functionPC, function, file, line}
+    file, line, functionPC, function, _ := AtFileLineFunction(callDepth + 1)
+    return &aTest{have, want, arguments, file, line, functionPC, function}
 }
 
 func (self *aTest) Description() string {
@@ -95,7 +94,7 @@ func (self *aTest) Description() string {
     return description
 }
 
-func AtPCFileLineFunction(callDepth int) (uintptr, string, int, string, bool) {
+func AtFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
     functionPC, file, line, good := runtime.Caller(callDepth + 1)
     function := runtime.FuncForPC(functionPC).Name()
     if (good) {
@@ -112,7 +111,7 @@ func AtPCFileLineFunction(callDepth int) (uintptr, string, int, string, bool) {
         file = "?"
         line = 1
     }
-    return functionPC, file, line, function, good
+    return file, line, functionPC, function, good
 }
 
 func (self *Tester) AtFailMessage(test *aTest, kind string) string {
