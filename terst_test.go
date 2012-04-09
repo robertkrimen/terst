@@ -9,4 +9,6 @@ func Test(t *testing.T) {
     Is("apple", "apple")
     IsNot("apple", "orange")
     Unlike("apple", `pp`)
+    Pass(false)
+    Fail(true)
 }

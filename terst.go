@@ -12,6 +12,49 @@ import (
     "regexp"
 )
 
+// Pass
+
+func Pass(have bool, arguments ...interface{}) bool {
+    return OurTester().AtPass(1, have, arguments...)
+}
+
+func (self *Tester) Pass(have bool, arguments ...interface{}) bool {
+    return self.AtPass(1, have, arguments...)
+}
+
+func (self *Tester) AtPass(callDepth int, have bool, arguments ...interface{}) bool {
+    return self.atPassOrFail(true, 1, have, arguments...)
+}
+
+// Fail
+
+func Fail(have bool, arguments ...interface{}) bool {
+    return OurTester().AtFail(1, have, arguments...)
+}
+
+func (self *Tester) Fail(have bool, arguments ...interface{}) bool {
+    return self.AtFail(1, have, arguments...)
+}
+
+func (self *Tester) AtFail(callDepth int, have bool, arguments ...interface{}) bool {
+    return self.atPassOrFail(false, 1, have, arguments...)
+}
+
+func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments ...interface{}) bool {
+    kind := "Pass"
+    if want == false {
+        kind = "Fail"
+    }
+    test := newTest(kind, callDepth + 1, have, want, arguments)
+    pass := have == want
+    if (!pass) {
+        self.Log(self.failMessageForPass(test))
+        self.TestingT.Fail()
+        return false
+    }
+    return true
+}
+
 // Is
 
 func Is(have, want interface{}, arguments ...interface{}) bool {
@@ -96,6 +139,15 @@ func (self *Tester) AtLike(wantMatch bool, callDepth int, have, want interface{}
 }
 
 // failMessage*
+
+func (self *Tester) failMessageForPass(test *aTest) string {
+    return self.FormatMessage(`
+        %s:%d: %s 
+           Failed test (%s)
+                  got: %s
+             expected: %s
+    `, test.file, test.line, test.Description(), test.kind, ToString(test.have), ToString(test.want))
+}
 
 func (self *Tester) failMessageForIs(test *aTest) string {
     return self.FormatMessage(`
