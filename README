@@ -47,13 +47,14 @@ USAGE
     Like( have interface{}, want string )
         A regular expression test. Convert have to a string (via fmt.Sprintf("%v"))
         and test against the regular expression specified by want
-        A match is passing
+        Passing is a match: The result of regexp.Match( ... ) is true
 
     Like( have interface{}, want interface{} )
         A shortcut for: Compare( have, "==", want )
 
     Unike( have interface{}, want string )
         Same behavior as with Like but with the opposite result
+        Passing is a mismatch: The result of regexp.Match( ... ) is false
 
     Unlike( have interface{}, want interface{} )
         A shortcut for: Compare( have, "!=", want )
