@@ -11,6 +11,11 @@ func init() {
     SanityCheck = true
 }
 
+type Apple struct {}
+func (self Apple) String() string {
+    return "This is an Apple object"
+}
+
 func TestPass(t *testing.T) {
 	Terst(t)
     expectResult = true
@@ -21,11 +26,11 @@ func TestPass(t *testing.T) {
     Compare(1, "==", 1)
     Compare("abc", ">=", "abc")
     Compare(math.Inf(0), ">", 2)
-	Like("apple", `pp`)
 
     // Is coerce
     Is(true, "true")
     Is(1, "1")
+    Is(Apple{}, "This is an Apple object")
 }
 
 func TestFail(t *testing.T) {
