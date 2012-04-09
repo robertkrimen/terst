@@ -22,6 +22,10 @@ func TestPass(t *testing.T) {
     Compare("abc", ">=", "abc")
     Compare(math.Inf(0), ">", 2)
 	Like("apple", `pp`)
+
+    // Is coerce
+    Is(true, "true")
+    Is(1, "1")
 }
 
 func TestFail(t *testing.T) {
@@ -41,4 +45,8 @@ func TestFail(t *testing.T) {
     Compare(6, ">", 6.0)
     Compare("abcd", "<", "abc")
     Compare("ab", ">=", "abc")
+
+    // Is coerce
+    Is("true", true)
+    Is("1", 1)
 }
