@@ -236,19 +236,49 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
 	})
 }
 
-func compare(left interface{}, operator string, right interface{}) bool {
+type (
+    compareScope int
+    compareOperation int
+)
+const (
+    compareSame compareScope = iota
+    compareSibling
+    compareFamily
+)
+const (
+    compareEqual compareOperation = iota
+    compareNotEqual
+    compareLessThan
+    compareLessThanOrEqual
+    compareGreaterThan
+    compareGreaterThanOrEqual
+)
+
+type compareOperator struct {
+	scope compareScope
+    operation compareOperation
+}
+
+func newCompareOperator(operator string) compareOperator {
+    scope := compareFamily
+    operation := compareEqual
+    return compareOperator{scope, operation}
+}
+
+func compare(left interface{}, operatorString string, right interface{}) bool {
 	pass := true
-	comparator := newComparator(left, right)
-	switch operator {
+    operator := newCompareOperator(operatorString)
+    comparator, _ := newComparator(left, operator, right)
+	switch operatorString {
 	case "==":
 		pass = comparator.isEqual()
 	case "!=":
 		pass = !comparator.isEqual()
 	default:
 		if !comparator.hasOrder() {
-			panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operator, right))
+			panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operatorString, right))
 		}
-		switch operator {
+		switch operatorString {
 		case "<":
 			pass = comparator.compare() == -1
 		case "<=":
@@ -258,7 +288,7 @@ func compare(left interface{}, operator string, right interface{}) bool {
 		case ">=":
 			pass = comparator.compare() >= 0
 		default:
-			panic(fmt.Errorf("Compare operator (%v) is invalid", operator))
+			panic(fmt.Errorf("Compare operator (%v) is invalid", operatorString))
 		}
 	}
 	return pass
@@ -266,30 +296,29 @@ func compare(left interface{}, operator string, right interface{}) bool {
 
 // Compare / Comparator
 
-type kind int
-
+type compareKind int
 const (
-	isInvalid = iota
-	isInteger
-	isFloat
-	isString
-	isBoolean
+	kindInvalid compareKind = iota
+	kindInteger
+	kindFloat
+	kindString
+	kindBoolean
 )
 
-func comparatorValue(value interface{}) (reflect.Value, int) {
+func comparatorValue(value interface{}) (reflect.Value, compareKind) {
 	reflectValue := reflect.ValueOf(value)
-	kind := isInvalid
+	kind := kindInvalid
 	switch value.(type) {
 	case int, int8, int16, int32, int64:
-		kind = isInteger
+		kind = kindInteger
 	case uint, uint8, uint16, uint32, uint64:
-		kind = isInteger
+		kind = kindInteger
 	case float32, float64:
-		kind = isFloat
+		kind = kindFloat
 	case string:
-		kind = isString
+		kind = kindString
 	case bool:
-		kind = isBoolean
+		kind = kindBoolean
 	}
 	return reflectValue, kind
 }
@@ -382,7 +411,6 @@ type integerComparator struct {
 	left  *big.Int
 	right *big.Int
 }
-
 func (self *integerComparator) compare() int {
 	return self.left.Cmp(self.right)
 }
@@ -418,36 +446,102 @@ func (self *booleanComparator) isEqual() bool {
 	return self.left == self.right
 }
 
-func newComparator(left interface{}, right interface{}) ofComparator {
+func newComparator(left interface{}, operator compareOperator, right interface{}) (ofComparator, error) {
 	leftValue, leftKind := comparatorValue(left)
 	rightValue, rightKind := comparatorValue(right)
-	if false {
-	} else if leftKind == isFloat || rightKind == isFloat {
+
+    targetKind := kindInvalid
+    same := leftKind == rightKind
+    sibling := false
+    family := false
+    if same {
+        sibling = true
+        family = true
+        targetKind = rightKind
+    } else {
+        lk := leftValue.Kind().String()
+        switch right.(type) {
+        case float32, float64:
+            if strings.HasPrefix(lk, "float") {
+                targetKind = kindFloat
+                sibling = true
+                family = true
+            } else if strings.HasPrefix(lk, "int") || strings.HasPrefix(lk, "uint") {
+                targetKind = kindFloat
+                family = true
+            }
+        case uint, uint8, uint16, uint32, uint64:
+            if strings.HasPrefix(lk, "uint") {
+                targetKind = kindInteger
+                sibling = true
+                family = true
+            } else if strings.HasPrefix(lk, "int") {
+                targetKind = kindInteger
+                family = true
+            } else if strings.HasPrefix(lk, "float") {
+                targetKind = kindFloat
+                family = true
+            }
+        case int, int8, int16, int32, int64:
+            if strings.HasPrefix(lk, "Int") {
+                targetKind = kindInteger
+                sibling = true
+                family = true
+            } else if strings.HasPrefix(lk, "uint") {
+                targetKind = kindInteger
+                family = true
+            } else if strings.HasPrefix(lk, "float") {
+                targetKind = kindFloat
+                family = true
+            }
+        case string:
+        case bool:
+        }
+    }
+
+    switch operator.scope {
+    case compareSame:
+        if ! same {
+            targetKind = kindInvalid
+        }
+    case compareSibling:
+        if ! sibling {
+            targetKind = kindInvalid
+        }
+    case compareFamily:
+        if ! family {
+            targetKind = kindInvalid
+        }
+    }
+
+    switch targetKind {
+    case kindFloat:
 		return &floatComparator{
 			&baseComparator{true},
 			toFloat(leftValue),
 			toFloat(rightValue),
-		}
-	} else if leftKind == isInteger || rightKind == isInteger {
+		}, nil
+    case kindInteger:
 		return &integerComparator{
 			&baseComparator{true},
 			toInteger(leftValue),
 			toInteger(rightValue),
-		}
-	} else if leftKind == isString {
+		}, nil
+    case kindString:
 		return &stringComparator{
 			&baseComparator{true},
 			toString(leftValue),
 			toString(rightValue),
-		}
-	} else if leftKind == isBoolean {
+		}, nil
+    case kindBoolean:
 		return &booleanComparator{
 			&baseComparator{false},
 			toBoolean(leftValue),
 			toBoolean(rightValue),
-		}
-	}
-	panic(fmt.Errorf("Comparing (%v) to (%v) not implemented", left, right))
+		}, nil
+    }
+
+	panic(fmt.Errorf("Comparing (%v) to (%v) is invalid", left, right))
 }
 
 // failMessage*
