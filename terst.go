@@ -598,14 +598,27 @@ func (self *Tester) failMessageForPass(test *test) string {
     `, test.file, test.line, test.Description(), test.kind, ToString(test.have), ToString(test.want))
 }
 
+func typeKindString(value interface{}) string {
+    reflectValue := reflect.ValueOf(value)
+    kind := reflectValue.Kind().String()
+    result := fmt.Sprintf("%T", value)
+    if kind == result {
+        if kind == "string" {
+            return ""
+        }
+        return fmt.Sprintf(" (%T)", value)
+    }
+    return fmt.Sprintf(" (%T=%s)", value, kind)
+}
+
 func (self *Tester) failMessageForCompare(test *test) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-                  %s
+                  %s%s
                        %s
-                  %s
-    `, test.file, test.line, test.Description(), test.kind, ToString(test.have), test.operator, ToString(test.want))
+                  %s%s
+    `, test.file, test.line, test.Description(), test.kind, ToString(test.have), typeKindString(test.have), test.operator, ToString(test.want), typeKindString(test.want))
 }
 
 func (self *Tester) failMessageForEqual(test *test) string {
