@@ -5,7 +5,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	Terst(t)
     Terst(t) // Associate terst methods with t (the current testing.T)
     Is("apple", "apple") // Pass
     Is(1, "1") // Pass: 1 is converted to a string before testing
