@@ -418,7 +418,7 @@ type interfaceComparator struct {
 	right interface{}
 }
 func (self *interfaceComparator) IsEqual() bool {
-	return reflect.DeepEqual(self.left, self.right)
+    return self.left == self.right
 }
 
 type floatComparator struct {
