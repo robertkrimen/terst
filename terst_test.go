@@ -22,8 +22,8 @@ func TestCompareOperator(t *testing.T) {
 	Terst(t)
 
     operator := newCompareOperator("#= ==")
-	Is(operator.scope, compareSame)
-	Is(operator.operator, "==")
+	Is(operator.scope, compareScopeEqual)
+	Is(operator.comparison, "==")
 }
 
 func TestPass(t *testing.T) {
@@ -36,12 +36,13 @@ func TestPass(t *testing.T) {
 	IsNot("apple", "orange")
 	Compare(true, ">", false)
 	Compare(1, "==", 1)
-	Compare(&Apple{}, "==", &Apple{})
+	Compare(&Apple{}, "#* ==", &Apple{})
+	Is(&Apple{}, &Apple{})
 	Compare("abc", ">=", "abc")
 	Compare(math.Inf(0), "==", 2)
 
 	Compare(1, "#= ==", 1)
-	Compare(compareFamily, "#= ==", int32(1))
+	Compare(compareScopeEqual, "#= ==", int32(1))
 	Compare("test", "#= ==", int32(1))
 	Is("1", 1)
 

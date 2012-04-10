@@ -150,7 +150,7 @@ func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface
 	case string:
         didPass = ToString(have) == want
     default:
-        didPass = have == want
+        didPass, _ = compare(have, "#~ ==", want)
 	}
     if !wantIs {
         didPass = !didPass
@@ -209,13 +209,11 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 			self.Log(self.failMessageForMatch(test, ToString(have), ToString(want), wantLike))
 		})
 	}
-	operator := "=="
+    didPass, operator := compare(have, "#* ==", want)
 	if !wantLike {
-		operator = "!="
+		didPass = !didPass
 	}
-    didPass, operator_ := compare(have, operator, want)
-    // FIXME Confusing
-    test.operator = operator_.operator
+    test.operator = operator
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
 	})
@@ -231,13 +229,11 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 	return self.AtCompare(1, have, operator, want, arguments...)
 }
 
-func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
-    operator = strings.TrimSpace(operator)
-	test := newTest("Compare "+operator, callDepth+1, left, right, arguments)
+func (self *Tester) AtCompare(callDepth int, left interface{}, operatorString string, right interface{}, arguments ...interface{}) bool {
+    operatorString = strings.TrimSpace(operatorString)
+	test := newTest("Compare "+operatorString, callDepth+1, left, right, arguments)
+	didPass, operator := compare(left, operatorString, right)
 	test.operator = operator
-	didPass, operator_ := compare(left, operator, right)
-    // FIXME Confusing
-    test.operator = operator_.operator
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForCompare(test))
 	})
@@ -245,35 +241,38 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
 
 type (
     compareScope int
-    compareOperation int
 )
 const (
-    compareSame compareScope = iota
-    compareSibling
-    compareFamily
+    compareScopeEqual compareScope = iota
+    compareScopeTilde
+    compareScopeAsterisk
 )
 
 type compareOperator struct {
 	scope compareScope
-    operator string
+    comparison string
 }
 
 func newCompareOperator(operatorString string) compareOperator {
 
+    if operatorString == "" {
+        return compareOperator{compareScopeEqual, ""}
+    }
+
     operator := operatorString
-    scope := compareFamily
+    scope := compareScopeAsterisk
     if index := strings.Index(operator, "#*"); index != -1 {
         operator = operator[index+2:]
     } else if index := strings.Index(operator, "#~"); index != -1 {
-        scope = compareSibling
+        scope = compareScopeTilde
         operator = operator[index+2:]
     } else if index := strings.Index(operator, "#="); index != -1 {
-        scope = compareSame
+        scope = compareScopeEqual
         operator = operator[index+2:]
     }
 
-    operator = strings.TrimSpace(operator)
-    switch operator {
+    comparison := strings.TrimSpace(operator)
+    switch comparison {
     case "==":
     case "!=":
     case "<":
@@ -283,7 +282,7 @@ func newCompareOperator(operatorString string) compareOperator {
     default:
     }
 
-    return compareOperator{scope, operator}
+    return compareOperator{scope, comparison}
 }
 
 func compare(left interface{}, operatorString string, right interface{}) (bool, compareOperator) {
@@ -291,14 +290,14 @@ func compare(left interface{}, operatorString string, right interface{}) (bool, 
     operator := newCompareOperator(operatorString)
     comparator := newComparator(left, operator, right)
     // FIXME Confusing
-	switch operator.operator {
+	switch operator.comparison {
     case "==":
 		pass = comparator.IsEqual()
     case "!=":
 		pass = !comparator.IsEqual()
 	default:
-		if comparator.CanCompare() {
-            switch operator.operator {
+		if comparator.HasOrder() {
+            switch operator.comparison {
             case "<":
                 pass = comparator.Compare() == -1
             case "<=":
@@ -308,7 +307,7 @@ func compare(left interface{}, operatorString string, right interface{}) (bool, 
             case ">=":
                 pass = comparator.Compare() >= 0
             default:
-                panic(fmt.Errorf("Compare operator (%v) is invalid", operator.operator))
+                panic(fmt.Errorf("Compare operator (%v) is invalid", operator.comparison))
             }
         } else {
             pass = false
@@ -397,19 +396,30 @@ func toBoolean(value reflect.Value) bool {
 
 type aComparator interface {
 	Compare() int
-	CanCompare() bool
+	HasOrder() bool
 	IsEqual() bool
+    CompareScope() compareScope
 }
 
 type baseComparator struct {
-	canCompare bool
+	hasOrder bool
+    operator compareOperator
 }
 
 func (self *baseComparator) Compare() int {
 	panic(fmt.Errorf("Invalid .Compare()"))
 }
-func (self *baseComparator) CanCompare() bool {
-	return self.canCompare
+func (self *baseComparator) HasOrder() bool {
+	return self.hasOrder
+}
+func (self *baseComparator) CompareScope() compareScope {
+	return self.operator.scope
+}
+func comparatorWithOrder(operator compareOperator) *baseComparator {
+    return &baseComparator{true, operator}
+}
+func comparatorWithoutOrder(operator compareOperator) *baseComparator {
+    return &baseComparator{false, operator}
 }
 
 type interfaceComparator struct {
@@ -418,6 +428,9 @@ type interfaceComparator struct {
 	right interface{}
 }
 func (self *interfaceComparator) IsEqual() bool {
+    if (self.CompareScope() == compareScopeAsterisk) {
+        return reflect.DeepEqual(self.left, self.right)
+    }
     return self.left == self.right
 }
 
@@ -484,10 +497,10 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
     targetKind := kindInterface
     // Are left and right of the same kind?
     // (reflect.Value.Kind() is different from compareKind)
-    isSame := leftValue.Kind() == rightValue.Kind()
-    isSibling := false
-    isFamily := false
-    if isSame {
+    scopeEqual := leftValue.Kind() == rightValue.Kind()
+    scopeTilde := false
+    scopeAsterisk := false
+    if scopeEqual {
         targetKind = rightKind // Since left and right are the same, the targetKind is Integer/Float/String/Boolean
     } else {
         // Examine the prefix of reflect.Value.Kind().String() to see if there is a similarity of 
@@ -503,11 +516,11 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
             if hasPrefix("float") {
                 // Left is also float*
                 targetKind = kindFloat
-                isSibling = true
+                scopeTilde = true
             } else if hasPrefix("int") || hasPrefix("uint") {
                 // Left is a kind of numeric (int* or uint*)
                 targetKind = kindFloat
-                isFamily = true
+                scopeAsterisk = true
             } else  {
                 // Otherwise left is a non-numeric
             }
@@ -516,15 +529,15 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
             if hasPrefix("uint") {
                 // Left is also uint*
                 targetKind = kindInteger
-                isSibling = true
+                scopeTilde = true
             } else if hasPrefix("int") {
                 // Left is an int* (a numeric)
                 targetKind = kindInteger
-                isFamily = true
+                scopeAsterisk = true
             } else if hasPrefix("float") {
                 // Left is an float* (a numeric)
                 targetKind = kindFloat
-                isFamily = true
+                scopeAsterisk = true
             } else  {
                 // Otherwise left is a non-numeric
             }
@@ -533,15 +546,15 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
             if hasPrefix("int") {
                 // Left is also int*
                 targetKind = kindInteger
-                isSibling = true
+                scopeTilde = true
             } else if hasPrefix("uint") {
                 // Left is a uint* (a numeric)
                 targetKind = kindInteger
-                isFamily = true
+                scopeAsterisk = true
             } else if hasPrefix("float") {
                 // Left is an float* (a numeric)
                 targetKind = kindFloat
-                isFamily = true
+                scopeAsterisk = true
             } else  {
                 // Otherwise left is a non-numeric
             }
@@ -556,12 +569,12 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
     {
         mismatch := false
         switch operator.scope {
-        case compareSame:
-            mismatch = ! isSame
-        case compareSibling:
-            mismatch = ! isSame && ! isSibling
-        case compareFamily:
-            mismatch = ! isSame && ! isSibling && ! isFamily
+        case compareScopeEqual:
+            mismatch = ! scopeEqual
+        case compareScopeTilde:
+            mismatch = ! scopeEqual && ! scopeTilde
+        case compareScopeAsterisk:
+            mismatch = ! scopeEqual && ! scopeTilde && ! scopeAsterisk
         }
         if mismatch {
             targetKind = kindInterface
@@ -571,25 +584,25 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
     switch targetKind {
     case kindFloat:
 		return &floatComparator{
-			&baseComparator{true},
+            comparatorWithOrder(operator),
 			toFloat(leftValue),
 			toFloat(rightValue),
 		}
     case kindInteger:
 		return &integerComparator{
-			&baseComparator{true},
+            comparatorWithOrder(operator),
 			toInteger(leftValue),
 			toInteger(rightValue),
 		}
     case kindString:
 		return &stringComparator{
-			&baseComparator{true},
+            comparatorWithOrder(operator),
 			toString(leftValue),
 			toString(rightValue),
         }
     case kindBoolean:
 		return &booleanComparator{
-			&baseComparator{false},
+            comparatorWithoutOrder(operator),
 			toBoolean(leftValue),
 			toBoolean(rightValue),
 		}
@@ -597,7 +610,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
 
     // As a last resort, we can always compare left (interface{}) to right (interface{})
     return &interfaceComparator{
-        &baseComparator{false},
+        comparatorWithoutOrder(operator),
         left,
         right,
     }
@@ -634,7 +647,7 @@ func (self *Tester) failMessageForCompare(test *test) string {
                   %v%s
                        %s
                   %v%s
-    `, test.file, test.line, test.Description(), test.kind, test.have, typeKindString(test.have), test.operator, test.want, typeKindString(test.want))
+    `, test.file, test.line, test.Description(), test.kind, test.have, typeKindString(test.have), test.operator.comparison, test.want, typeKindString(test.want))
 }
 
 func (self *Tester) failMessageForEqual(test *test) string {
@@ -772,7 +785,7 @@ type test struct {
 	have      interface{}
 	want      interface{}
 	arguments []interface{}
-	operator  string // Only used for Compare 
+	operator  compareOperator
 
 	file       string
 	line       int
@@ -782,7 +795,7 @@ type test struct {
 
 func newTest(kind string, callDepth int, have, want interface{}, arguments ...interface{}) *test {
 	file, line, functionPC, function, _ := AtFileLineFunction(callDepth + 1)
-	operator := ""
+	operator := newCompareOperator("")
 	return &test{kind, have, want, arguments, operator, file, line, functionPC, function}
 }
 
