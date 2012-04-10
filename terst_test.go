@@ -23,7 +23,7 @@ func TestCompareOperator(t *testing.T) {
 
     operator := newCompareOperator("#= ==")
 	Is(operator.scope, compareSame)
-	Is(operator.operatorString, "==")
+	Is(operator.operator, "==")
 }
 
 func TestPass(t *testing.T) {
