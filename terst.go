@@ -14,26 +14,26 @@ import (
 )
 
 var (
-    SanityCheck bool = true
+	SanityCheck bool = true
 
-    expectResult bool
-    isTesting bool = false
+	expectResult bool
+	isTesting    bool = false
 )
 
 func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
-    if isTesting {
-        if expectResult != result {
-            self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expectResult, result, test.kind, test.have, test.want))
-            onFail()
-            self.fail()
-        }
-        return result
-    }
-    if !result {
-        onFail()
-        self.fail()
-    }
-    return result
+	if isTesting {
+		if expectResult != result {
+			self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expectResult, result, test.kind, test.have, test.want))
+			onFail()
+			self.fail()
+		}
+		return result
+	}
+	if !result {
+		onFail()
+		self.fail()
+	}
+	return result
 }
 
 // Pass
@@ -71,9 +71,9 @@ func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments 
 	}
 	test := newTest(kind, callDepth+1, have, want, arguments)
 	didPass := have == want
-    return self.hadResult(didPass, test, func(){
+	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForPass(test))
-    })
+	})
 }
 
 // Equal
@@ -89,9 +89,9 @@ func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool
 func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("==", callDepth+1, have, want, arguments)
 	didPass := have == want
-    return self.hadResult(didPass, test, func(){
+	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForEqual(test))
-    })
+	})
 }
 
 // Unequal
@@ -107,9 +107,9 @@ func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bo
 func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("!=", callDepth+1, have, want, arguments)
 	didPass := have != want
-    return self.hadResult(didPass, test, func(){
+	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
-    })
+	})
 }
 
 // Is
@@ -124,15 +124,15 @@ func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
 
 func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Is", callDepth+1, have, want, arguments)
-    switch want.(type) {
-    case string:
-        have = ToString(have)
-        test.have = have
-    }
+	switch want.(type) {
+	case string:
+		have = ToString(have)
+		test.have = have
+	}
 	didPass := have == want
-    return self.hadResult(didPass, test, func(){
+	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
-    })
+	})
 }
 
 // IsNot
@@ -147,15 +147,15 @@ func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool
 
 func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("IsNot", callDepth+1, have, want, arguments)
-    switch want.(type) {
-    case string:
-        have = ToString(have)
-        test.have = have
-    }
+	switch want.(type) {
+	case string:
+		have = ToString(have)
+		test.have = have
+	}
 	didPass := have != want
-    return self.hadResult(didPass, test, func(){
+	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
-    })
+	})
 }
 
 // Like
@@ -188,10 +188,10 @@ func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ..
 
 func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Like", callDepth+1, have, want, arguments)
-    if !wantLike {
-        test.kind = "Unlike"
-    }
-    didPass := true
+	if !wantLike {
+		test.kind = "Unlike"
+	}
+	didPass := true
 	switch want0 := want.(type) {
 	case string:
 		haveString := ToString(have)
@@ -202,19 +202,19 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 		if error != nil {
 			panic("regexp.Match(" + want0 + ", ...): " + error.Error())
 		}
-        want = fmt.Sprintf("(?:%v)", want) // Make it look like a regular expression
-        return self.hadResult(didPass, test, func(){
-            self.Log(self.failMessageForMatch(test, ToString(have), ToString(want), wantLike))
-        })
-    }
-    operator := "=="
-    if !wantLike {
-        operator = "!="
-    }
-    didPass = compare(have, operator, want)
-    return self.hadResult(didPass, test, func(){
-        self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
-    })
+		want = fmt.Sprintf("(?:%v)", want) // Make it look like a regular expression
+		return self.hadResult(didPass, test, func() {
+			self.Log(self.failMessageForMatch(test, ToString(have), ToString(want), wantLike))
+		})
+	}
+	operator := "=="
+	if !wantLike {
+		operator = "!="
+	}
+	didPass = compare(have, operator, want)
+	return self.hadResult(didPass, test, func() {
+		self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
+	})
 }
 
 // Compare 
@@ -228,220 +228,226 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 }
 
 func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
-    test := newTest("Compare " + operator, callDepth+1, left, right, arguments)
-    test.operator = operator
-    didPass := compare(left, operator, right)
-    return self.hadResult(didPass, test, func(){
-        self.Log(self.failMessageForCompare(test))
-    })
+	test := newTest("Compare "+operator, callDepth+1, left, right, arguments)
+	test.operator = operator
+	didPass := compare(left, operator, right)
+	return self.hadResult(didPass, test, func() {
+		self.Log(self.failMessageForCompare(test))
+	})
 }
 
 func compare(left interface{}, operator string, right interface{}) bool {
-    pass := true
-    comparator := newComparator(left, right)
-    switch operator {
-    case "==":
-        pass = comparator.isEqual()
-    case "!=":
-        pass = !comparator.isEqual()
-    default:
-        if !comparator.hasOrder() {
-            panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operator, right))
-        }
-        switch operator {
-        case "<":
-            pass = comparator.compare() == -1
-        case "<=":
-            pass = comparator.compare() <= 0
-        case ">":
-            pass = comparator.compare() == 1
-        case ">=":
-            pass = comparator.compare() >= 0
-        default:
-            panic(fmt.Errorf("Compare operator (%v) is invalid", operator))
-        }
-    }
-    return pass
+	pass := true
+	comparator := newComparator(left, right)
+	switch operator {
+	case "==":
+		pass = comparator.isEqual()
+	case "!=":
+		pass = !comparator.isEqual()
+	default:
+		if !comparator.hasOrder() {
+			panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operator, right))
+		}
+		switch operator {
+		case "<":
+			pass = comparator.compare() == -1
+		case "<=":
+			pass = comparator.compare() <= 0
+		case ">":
+			pass = comparator.compare() == 1
+		case ">=":
+			pass = comparator.compare() >= 0
+		default:
+			panic(fmt.Errorf("Compare operator (%v) is invalid", operator))
+		}
+	}
+	return pass
 }
 
 // Compare / Comparator
 
 type kind int
+
 const (
-    isInvalid = iota
-    isInteger
-    isFloat
-    isString
-    isBoolean
+	isInvalid = iota
+	isInteger
+	isFloat
+	isString
+	isBoolean
 )
 
 func comparatorValue(value interface{}) (reflect.Value, int) {
-    reflectValue := reflect.ValueOf(value)
-    kind := isInvalid
-    switch value.(type) {
-    case int, int8, int16, int32, int64:
-        kind = isInteger
-    case uint, uint8, uint16, uint32, uint64:
-        kind = isInteger
-    case float32, float64:
-        kind = isFloat
-    case string:
-        kind = isString
-    case bool:
-        kind = isBoolean
-    }
-    return reflectValue, kind
+	reflectValue := reflect.ValueOf(value)
+	kind := isInvalid
+	switch value.(type) {
+	case int, int8, int16, int32, int64:
+		kind = isInteger
+	case uint, uint8, uint16, uint32, uint64:
+		kind = isInteger
+	case float32, float64:
+		kind = isFloat
+	case string:
+		kind = isString
+	case bool:
+		kind = isBoolean
+	}
+	return reflectValue, kind
 }
 
 func toFloat(value reflect.Value) float64 {
-    switch result := value.Interface().(type) {
-    case int, int8, int16, int32, int64:
-        return float64(value.Int())
-    case uint, uint8, uint16, uint32, uint64:
-        return float64(value.Uint())
-    case float32, float64:
-        return float64(value.Float())
-    default:
-        panic(fmt.Errorf("toFloat( %v )", result))
-    }
-    panic(0)
+	switch result := value.Interface().(type) {
+	case int, int8, int16, int32, int64:
+		return float64(value.Int())
+	case uint, uint8, uint16, uint32, uint64:
+		return float64(value.Uint())
+	case float32, float64:
+		return float64(value.Float())
+	default:
+		panic(fmt.Errorf("toFloat( %v )", result))
+	}
+	panic(0)
 }
 
 func toInteger(value reflect.Value) *big.Int {
-    switch result := value.Interface().(type) {
-    case int, int8, int16, int32, int64:
-        return big.NewInt(value.Int())
-    case uint, uint8, uint16, uint32, uint64:
-        yield := big.NewInt(0)
-        yield.SetString(fmt.Sprintf("%v", value.Uint()), 10)
-        return yield
-    default:
-        panic(fmt.Errorf("toInteger( %v )", result))
-    }
-    panic(0)
+	switch result := value.Interface().(type) {
+	case int, int8, int16, int32, int64:
+		return big.NewInt(value.Int())
+	case uint, uint8, uint16, uint32, uint64:
+		yield := big.NewInt(0)
+		yield.SetString(fmt.Sprintf("%v", value.Uint()), 10)
+		return yield
+	default:
+		panic(fmt.Errorf("toInteger( %v )", result))
+	}
+	panic(0)
 }
 
 func toString(value reflect.Value) string {
-    switch result := value.Interface().(type) {
-    case string:
-        return result
-    default:
-        panic(fmt.Errorf("toString( %v )", result))
-    }
-    panic(0)
+	switch result := value.Interface().(type) {
+	case string:
+		return result
+	default:
+		panic(fmt.Errorf("toString( %v )", result))
+	}
+	panic(0)
 }
 
 func toBoolean(value reflect.Value) bool {
-    switch result := value.Interface().(type) {
-    case bool:
-        return result
-    default:
-        panic(fmt.Errorf("toBoolean( %v )", result))
-    }
-    panic(0)
+	switch result := value.Interface().(type) {
+	case bool:
+		return result
+	default:
+		panic(fmt.Errorf("toBoolean( %v )", result))
+	}
+	panic(0)
 }
 
 type ofComparator interface {
-    compare() int
-    isEqual() bool
-    hasOrder() bool
+	compare() int
+	isEqual() bool
+	hasOrder() bool
 }
 
 type baseComparator struct {
-    order bool
+	order bool
 }
+
 func (self *baseComparator) compare() int {
-    panic(fmt.Errorf("Attempt to .compare() on type without order"))
+	panic(fmt.Errorf("Attempt to .compare() on type without order"))
 }
 func (self *baseComparator) hasOrder() bool {
-    return self.order
+	return self.order
 }
 
 type floatComparator struct {
-    *baseComparator
-    left float64
-    right float64
+	*baseComparator
+	left  float64
+	right float64
 }
+
 func (self *floatComparator) compare() int {
-    if self.left == self.right {
-        return 0
-    } else if self.left < self.right {
-        return -1
-    }
-    return 1
+	if self.left == self.right {
+		return 0
+	} else if self.left < self.right {
+		return -1
+	}
+	return 1
 }
 func (self *floatComparator) isEqual() bool {
-    return self.left == self.right
+	return self.left == self.right
 }
 
 type integerComparator struct {
-    *baseComparator
-    left *big.Int
-    right *big.Int
+	*baseComparator
+	left  *big.Int
+	right *big.Int
 }
+
 func (self *integerComparator) compare() int {
-    return self.left.Cmp(self.right)
+	return self.left.Cmp(self.right)
 }
 func (self *integerComparator) isEqual() bool {
-    return 0 == self.left.Cmp(self.right)
+	return 0 == self.left.Cmp(self.right)
 }
 
 type stringComparator struct {
-    *baseComparator
-    left string
-    right string
+	*baseComparator
+	left  string
+	right string
 }
+
 func (self *stringComparator) compare() int {
-    if self.left == self.right {
-        return 0
-    } else if self.left < self.right {
-        return -1
-    }
-    return 1
+	if self.left == self.right {
+		return 0
+	} else if self.left < self.right {
+		return -1
+	}
+	return 1
 }
 func (self *stringComparator) isEqual() bool {
-    return self.left == self.right
+	return self.left == self.right
 }
 
 type booleanComparator struct {
-    *baseComparator
-    left bool
-    right bool
+	*baseComparator
+	left  bool
+	right bool
 }
+
 func (self *booleanComparator) isEqual() bool {
-    return self.left == self.right
+	return self.left == self.right
 }
 
 func newComparator(left interface{}, right interface{}) ofComparator {
-    leftValue, leftKind := comparatorValue(left)
-    rightValue, rightKind := comparatorValue(right)
-    if false {
-    } else if leftKind == isFloat || rightKind == isFloat {
-        return &floatComparator{
-            &baseComparator{true},
-            toFloat(leftValue),
-            toFloat(rightValue),
-        }
-    } else if leftKind == isInteger || rightKind == isInteger {
-        return &integerComparator{
-            &baseComparator{true},
-            toInteger(leftValue),
-            toInteger(rightValue),
-        }
-    } else if leftKind == isString {
-        return &stringComparator{
-            &baseComparator{true},
-            toString(leftValue),
-            toString(rightValue),
-        }
-    } else if leftKind == isBoolean {
-        return &booleanComparator{
-            &baseComparator{false},
-            toBoolean(leftValue),
-            toBoolean(rightValue),
-        }
-    }
-    panic(fmt.Errorf("Comparing (%v) to (%v) not implemented", left, right))
+	leftValue, leftKind := comparatorValue(left)
+	rightValue, rightKind := comparatorValue(right)
+	if false {
+	} else if leftKind == isFloat || rightKind == isFloat {
+		return &floatComparator{
+			&baseComparator{true},
+			toFloat(leftValue),
+			toFloat(rightValue),
+		}
+	} else if leftKind == isInteger || rightKind == isInteger {
+		return &integerComparator{
+			&baseComparator{true},
+			toInteger(leftValue),
+			toInteger(rightValue),
+		}
+	} else if leftKind == isString {
+		return &stringComparator{
+			&baseComparator{true},
+			toString(leftValue),
+			toString(rightValue),
+		}
+	} else if leftKind == isBoolean {
+		return &booleanComparator{
+			&baseComparator{false},
+			toBoolean(leftValue),
+			toBoolean(rightValue),
+		}
+	}
+	panic(fmt.Errorf("Comparing (%v) to (%v) not implemented", left, right))
 }
 
 // failMessage*
@@ -466,7 +472,7 @@ func (self *Tester) failMessageForCompare(test *test) string {
 }
 
 func (self *Tester) failMessageForEqual(test *test) string {
-    return self.failMessageForIs(test)
+	return self.failMessageForIs(test)
 }
 
 func (self *Tester) failMessageForIs(test *test) string {
@@ -479,9 +485,9 @@ func (self *Tester) failMessageForIs(test *test) string {
 }
 
 func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch bool) string {
-    expect := "  like"
+	expect := "  like"
 	if !wantMatch {
-        expect = "unlike"
+		expect = "unlike"
 	}
 	return self.FormatMessage(`
         %s:%d: %s 
@@ -493,7 +499,7 @@ func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch
 
 func (self *Tester) failMessageForLike(test *test, have, want string, wantLike bool) string {
 	if !wantLike {
-        want = "Anything else"
+		want = "Anything else"
 	}
 	return self.FormatMessage(`
         %s:%d: %s 
@@ -506,46 +512,46 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 // ...
 
 type Tester struct {
-	TestingT *testing.T
-    TestEntry uintptr
-    sanityCheck bool
+	TestingT    *testing.T
+	TestEntry   uintptr
+	sanityCheck bool
 }
 
 var _ourTester *Tester = nil
 
 func testFunctionEntry() uintptr {
-    height := 2
-    for {
-	    functionPC, _, _, good := runtime.Caller(height)
-	    function := runtime.FuncForPC(functionPC)
-	    functionName := function.Name()
-        if !good {
-            return 0
-        }
-		if index := strings.LastIndex(functionName, ".Test"); index >= 0 {
-            // Assume we have an instance of TestXyzzy in a _test file
-            return function.Entry()
+	height := 2
+	for {
+		functionPC, _, _, good := runtime.Caller(height)
+		function := runtime.FuncForPC(functionPC)
+		functionName := function.Name()
+		if !good {
+			return 0
 		}
-        height += 1
-    }
-    return 0
+		if index := strings.LastIndex(functionName, ".Test"); index >= 0 {
+			// Assume we have an instance of TestXyzzy in a _test file
+			return function.Entry()
+		}
+		height += 1
+	}
+	return 0
 }
 
 func Terst(arguments ...interface{}) *Tester {
-    if len(arguments) == 0 {
-        _ourTester = nil
-    } else {
-	    _ourTester = NewTester(arguments[0].(*testing.T))
-        _ourTester.sanityCheck = SanityCheck
-        if _ourTester.sanityCheck {
-            _ourTester.TestEntry = testFunctionEntry()
-        }
-    }
+	if len(arguments) == 0 {
+		_ourTester = nil
+	} else {
+		_ourTester = NewTester(arguments[0].(*testing.T))
+		_ourTester.sanityCheck = SanityCheck
+		if _ourTester.sanityCheck {
+			_ourTester.TestEntry = testFunctionEntry()
+		}
+	}
 	return _ourTester
 }
 
 func UnTerst() {
-    _ourTester = nil
+	_ourTester = nil
 }
 
 func OurTester() *Tester {
@@ -580,17 +586,17 @@ func (self *Tester) Log(moreOutput string) {
 }
 
 func (self *Tester) fail() {
-    self.TestingT.Fail()
+	self.TestingT.Fail()
 }
 
 func (self *Tester) checkSanity() *Tester {
-    if self.sanityCheck && self.TestEntry != 0 {
-        foundEntry := testFunctionEntry()
-        if self.TestEntry != foundEntry {
-            panic(fmt.Errorf("TestEntry(%v) does not match foundEntry(%v): Did you call Terst when entering a new Test* function?", self.TestEntry, foundEntry))
-        }
-    }
-    return self
+	if self.sanityCheck && self.TestEntry != 0 {
+		foundEntry := testFunctionEntry()
+		if self.TestEntry != foundEntry {
+			panic(fmt.Errorf("TestEntry(%v) does not match foundEntry(%v): Did you call Terst when entering a new Test* function?", self.TestEntry, foundEntry))
+		}
+	}
+	return self
 }
 
 // test
@@ -600,7 +606,7 @@ type test struct {
 	have      interface{}
 	want      interface{}
 	arguments []interface{}
-    operator string // Only used for Compare 
+	operator  string // Only used for Compare 
 
 	file       string
 	line       int
@@ -610,7 +616,7 @@ type test struct {
 
 func newTest(kind string, callDepth int, have, want interface{}, arguments ...interface{}) *test {
 	file, line, functionPC, function, _ := AtFileLineFunction(callDepth + 1)
-    operator := ""
+	operator := ""
 	return &test{kind, have, want, arguments, operator, file, line, functionPC, function}
 }
 
@@ -645,30 +651,30 @@ func AtFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
 // Conversion
 
 func integerValue(value interface{}) int64 {
-    return reflect.ValueOf(value).Int()
+	return reflect.ValueOf(value).Int()
 }
 
 func unsignedIntegerValue(value interface{}) uint64 {
-    return reflect.ValueOf(value).Uint()
+	return reflect.ValueOf(value).Uint()
 }
 
 func floatValue(value interface{}) float64 {
-    return reflect.ValueOf(value).Float()
+	return reflect.ValueOf(value).Float()
 }
 
 func ToString(value interface{}) string {
 	switch value0 := value.(type) {
 	case bool:
 		return fmt.Sprintf("%v", value)
-    case int, int8, int16, int32, int64:
+	case int, int8, int16, int32, int64:
 		return fmt.Sprintf("%v", value)
-    case uint, uint8, uint16, uint32, uint64:
+	case uint, uint8, uint16, uint32, uint64:
 		return fmt.Sprintf("%v", value)
 	case string:
 		return fmt.Sprintf("%v", value)
-    case float32:
+	case float32:
 		return fmt.Sprintf("%v", value)
-    case float64:
+	case float64:
 		if math.IsNaN(value0) {
 			return "NaN"
 		} else if math.IsInf(value0, 0) {
@@ -676,5 +682,5 @@ func ToString(value interface{}) string {
 		}
 		return fmt.Sprintf("%v", value)
 	}
-    return fmt.Sprintf("%v", value)
+	return fmt.Sprintf("%v", value)
 }
