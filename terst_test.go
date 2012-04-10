@@ -42,9 +42,13 @@ func TestPass(t *testing.T) {
 	Compare(compareFamily, "#= ==", int32(1))
 	Compare("test", "#= ==", int32(1))
 	Is("1", 1)
-	return
 
-	// Is coerce
+}
+
+func TestIs(t *testing.T) {
+	Terst(t)
+	isTesting = false
+
 	Is(true, "true")
 	Is(1, "1")
 	Is(Apple{}, "This is an Apple object")
@@ -54,7 +58,6 @@ func TestFail(t *testing.T) {
 	Terst(t)
 	isTesting = true
 	expectResult = false
-	return
 	Unlike("apple", `pp`)
 	Like(1, 1.1)
 	Compare(uint64(math.MaxUint64), "<", int64(math.MinInt32))

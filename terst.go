@@ -126,8 +126,8 @@ func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...int
 	test := newTest("Is", callDepth+1, have, want, arguments)
 	switch want.(type) {
 	case string:
-		have = ToString(have)
-		test.have = have
+        have = ToString(have)
+        test.have = have
 	}
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
@@ -813,6 +813,7 @@ func floatValue(value interface{}) float64 {
 }
 
 func ToString(value interface{}) string {
+	return fmt.Sprintf("%v", value)
 	switch value0 := value.(type) {
 	case bool:
 		return fmt.Sprintf("%v", value)
