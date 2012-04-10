@@ -17,8 +17,18 @@ func (self Apple) String() string {
 	return "This is an Apple object"
 }
 
+func TestCompareOperator(t *testing.T) {
+	isTesting = false
+	Terst(t)
+
+    operator := newCompareOperator("#= ==")
+	Is(operator.scope, compareSame)
+	Is(operator.operatorString, "==")
+}
+
 func TestPass(t *testing.T) {
 	Terst(t)
+	isTesting = true
 	expectResult = true
 	Is(1, 1)
 	Compare(1, "==", 1.0)
@@ -28,6 +38,10 @@ func TestPass(t *testing.T) {
 	Compare("abc", ">=", "abc")
 	Compare(math.Inf(0), ">", 2)
 
+	Compare(1, "#= ==", 1)
+	Compare(1, "#= ==", int32(1))
+	return
+
 	// Is coerce
 	Is(true, "true")
 	Is(1, "1")
@@ -36,7 +50,9 @@ func TestPass(t *testing.T) {
 
 func TestFail(t *testing.T) {
 	Terst(t)
+	isTesting = true
 	expectResult = false
+	return
 	Unlike("apple", `pp`)
 	Like(1, 1.1)
 	Compare(uint64(math.MaxUint64), "<", int64(math.MinInt32))

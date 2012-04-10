@@ -211,7 +211,8 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 	if !wantLike {
 		operator = "!="
 	}
-	didPass = compare(have, operator, want)
+    didPass, operator_, _ := compare(have, operator, want)
+    test.operator = operator_.operatorString
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
 	})
@@ -228,9 +229,11 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 }
 
 func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, right interface{}, arguments ...interface{}) bool {
+    operator = strings.TrimSpace(operator)
 	test := newTest("Compare "+operator, callDepth+1, left, right, arguments)
 	test.operator = operator
-	didPass := compare(left, operator, right)
+	didPass, operator_, _ := compare(left, operator, right)
+    test.operator = operator_.operatorString
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForCompare(test))
 	})
@@ -246,7 +249,8 @@ const (
     compareFamily
 )
 const (
-    compareEqual compareOperation = iota
+    compareInvalid compareOperation = iota
+    compareEqual
     compareNotEqual
     compareLessThan
     compareLessThanOrEqual
@@ -257,41 +261,72 @@ const (
 type compareOperator struct {
 	scope compareScope
     operation compareOperation
+    operatorString string
 }
 
 func newCompareOperator(operator string) compareOperator {
     scope := compareFamily
-    operation := compareEqual
-    return compareOperator{scope, operation}
+    operation := compareInvalid
+
+    if index := strings.Index(operator, "#*"); index != -1 {
+        operator = operator[index+2:]
+    } else if index := strings.Index(operator, "#~"); index != -1 {
+        scope = compareSibling
+        operator = operator[index+2:]
+    } else if index := strings.Index(operator, "#="); index != -1 {
+        scope = compareSame
+        operator = operator[index+2:]
+    }
+
+    operatorString := strings.TrimSpace(operator)
+    switch operatorString {
+    case "==":
+        operation = compareEqual
+    case "!=":
+        operation = compareNotEqual
+    case "<":
+        operation = compareLessThan
+    case "<=":
+        operation = compareLessThanOrEqual
+    case ">":
+        operation = compareGreaterThan
+    case ">=":
+        operation = compareGreaterThanOrEqual
+    }
+
+    return compareOperator{scope, operation, operatorString}
 }
 
-func compare(left interface{}, operatorString string, right interface{}) bool {
+func compare(left interface{}, operatorString string, right interface{}) (bool, compareOperator, error) {
 	pass := true
     operator := newCompareOperator(operatorString)
-    comparator, _ := newComparator(left, operator, right)
-	switch operatorString {
-	case "==":
+    comparator, error := newComparator(left, operator, right)
+    if error != nil {
+        return false, operator, error
+    }
+	switch operator.operation {
+    case compareEqual:
 		pass = comparator.isEqual()
-	case "!=":
+    case compareNotEqual:
 		pass = !comparator.isEqual()
 	default:
 		if !comparator.hasOrder() {
 			panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operatorString, right))
 		}
-		switch operatorString {
-		case "<":
+		switch operator.operation {
+        case compareLessThan:
 			pass = comparator.compare() == -1
-		case "<=":
+        case compareLessThanOrEqual:
 			pass = comparator.compare() <= 0
-		case ">":
+        case compareGreaterThan:
 			pass = comparator.compare() == 1
-		case ">=":
+        case compareGreaterThanOrEqual:
 			pass = comparator.compare() >= 0
 		default:
 			panic(fmt.Errorf("Compare operator (%v) is invalid", operatorString))
 		}
 	}
-	return pass
+	return pass, operator, nil
 }
 
 // Compare / Comparator
@@ -300,6 +335,7 @@ type compareKind int
 const (
 	kindInvalid compareKind = iota
 	kindInteger
+	kindUnsignedInteger
 	kindFloat
 	kindString
 	kindBoolean
@@ -312,7 +348,7 @@ func comparatorValue(value interface{}) (reflect.Value, compareKind) {
 	case int, int8, int16, int32, int64:
 		kind = kindInteger
 	case uint, uint8, uint16, uint32, uint64:
-		kind = kindInteger
+		kind = kindUnsignedInteger
 	case float32, float64:
 		kind = kindFloat
 	case string:
@@ -460,37 +496,40 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
         targetKind = rightKind
     } else {
         lk := leftValue.Kind().String()
+        hasPrefix := func(prefix string) bool {
+            return strings.HasPrefix(lk, prefix)
+        }
         switch right.(type) {
         case float32, float64:
-            if strings.HasPrefix(lk, "float") {
+            if hasPrefix("float") {
                 targetKind = kindFloat
                 sibling = true
                 family = true
-            } else if strings.HasPrefix(lk, "int") || strings.HasPrefix(lk, "uint") {
+            } else if hasPrefix("int") || hasPrefix("uint") {
                 targetKind = kindFloat
                 family = true
             }
         case uint, uint8, uint16, uint32, uint64:
-            if strings.HasPrefix(lk, "uint") {
+            if hasPrefix("uint") {
                 targetKind = kindInteger
                 sibling = true
                 family = true
-            } else if strings.HasPrefix(lk, "int") {
+            } else if hasPrefix("int") {
                 targetKind = kindInteger
                 family = true
-            } else if strings.HasPrefix(lk, "float") {
+            } else if hasPrefix("float") {
                 targetKind = kindFloat
                 family = true
             }
         case int, int8, int16, int32, int64:
-            if strings.HasPrefix(lk, "Int") {
+            if hasPrefix("int") {
                 targetKind = kindInteger
                 sibling = true
                 family = true
-            } else if strings.HasPrefix(lk, "uint") {
+            } else if hasPrefix("uint") {
                 targetKind = kindInteger
                 family = true
-            } else if strings.HasPrefix(lk, "float") {
+            } else if hasPrefix("float") {
                 targetKind = kindFloat
                 family = true
             }
@@ -499,6 +538,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
         }
     }
 
+    fmt.Println("%v %v %v %v %s %s", operator.scope, same, sibling, family, leftValue, rightValue)
     switch operator.scope {
     case compareSame:
         if ! same {
@@ -539,6 +579,9 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
 			toBoolean(leftValue),
 			toBoolean(rightValue),
 		}, nil
+    case kindInvalid:
+        return nil, fmt.Errorf("Unable to compare (%v) to (%v) at scope (%v)", left, right, operator.scope)
+
     }
 
 	panic(fmt.Errorf("Comparing (%v) to (%v) is invalid", left, right))
