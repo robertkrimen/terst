@@ -615,10 +615,10 @@ func (self *Tester) failMessageForCompare(test *test) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-                  %s%s
+                  %v%s
                        %s
-                  %s%s
-    `, test.file, test.line, test.Description(), test.kind, ToString(test.have), typeKindString(test.have), test.operator, ToString(test.want), typeKindString(test.want))
+                  %v%s
+    `, test.file, test.line, test.Description(), test.kind, test.have, typeKindString(test.have), test.operator, test.want, typeKindString(test.want))
 }
 
 func (self *Tester) failMessageForEqual(test *test) string {
@@ -629,9 +629,9 @@ func (self *Tester) failMessageForIs(test *test) string {
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-                  got: %s
-             expected: %s
-    `, test.file, test.line, test.Description(), test.kind, test.have, test.want)
+                  got: %v%s
+             expected: %v%s
+    `, test.file, test.line, test.Description(), test.kind, test.have, typeKindString(test.have), test.want, typeKindString(test.want))
 }
 
 func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch bool) string {
@@ -642,9 +642,9 @@ func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-                  got: %s
+                  got: %v%s
                %s: %s
-    `, test.file, test.line, test.Description(), test.kind, have, expect, want)
+    `, test.file, test.line, test.Description(), test.kind, have, typeKindString(have), expect, want)
 }
 
 func (self *Tester) failMessageForLike(test *test, have, want string, wantLike bool) string {
@@ -654,9 +654,9 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
-                  got: %s
-             expected: %s
-    `, test.file, test.line, test.Description(), test.kind, have, want)
+                  got: %v%s
+             expected: %v%s
+    `, test.file, test.line, test.Description(), test.kind, have, typeKindString(have), want, typeKindString(want))
 }
 
 // ...

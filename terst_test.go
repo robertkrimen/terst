@@ -36,11 +36,12 @@ func TestPass(t *testing.T) {
 	IsNot("apple", "orange")
 	Compare(1, "==", 1)
 	Compare("abc", ">=", "abc")
-	Compare(math.Inf(0), ">", 2)
+	Compare(math.Inf(0), "==", 2)
 
 	Compare(1, "#= ==", 1)
 	Compare(compareFamily, "#= ==", int32(1))
 	Compare("test", "#= ==", int32(1))
+	Is("1", 1)
 	return
 
 	// Is coerce
