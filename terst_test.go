@@ -34,7 +34,9 @@ func TestPass(t *testing.T) {
 	Compare(1, "==", 1.0)
 	Is("apple", "apple")
 	IsNot("apple", "orange")
+	Compare(true, ">", false)
 	Compare(1, "==", 1)
+	Compare(&Apple{}, "==", &Apple{})
 	Compare("abc", ">=", "abc")
 	Compare(math.Inf(0), "==", 2)
 

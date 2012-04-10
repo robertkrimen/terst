@@ -123,16 +123,7 @@ func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
 }
 
 func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Is", callDepth+1, have, want, arguments)
-	switch want.(type) {
-	case string:
-        have = ToString(have)
-        test.have = have
-	}
-	didPass := have == want
-	return self.hadResult(didPass, test, func() {
-		self.Log(self.failMessageForIs(test))
-	})
+	return self.atIsOrIsNot(true, callDepth+1, have, want, arguments...)
 }
 
 // IsNot
@@ -146,13 +137,24 @@ func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool
 }
 
 func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("IsNot", callDepth+1, have, want, arguments)
+	return self.atIsOrIsNot(false, callDepth+1, have, want, arguments...)
+}
+
+func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
+	test := newTest("Is", callDepth+1, have, want, arguments)
+    if !wantIs {
+        test.kind = "IsNot"
+    }
+    didPass := false
 	switch want.(type) {
 	case string:
-		have = ToString(have)
-		test.have = have
+        didPass = ToString(have) == want
+    default:
+        didPass = have == want
 	}
-	didPass := have != want
+    if !wantIs {
+        didPass = !didPass
+    }
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
 	})
@@ -191,7 +193,7 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 	if !wantLike {
 		test.kind = "Unlike"
 	}
-	didPass := true
+	didPass := false
 	switch want0 := want.(type) {
 	case string:
 		haveString := ToString(have)
@@ -211,7 +213,7 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 	if !wantLike {
 		operator = "!="
 	}
-    didPass, operator_, _ := compare(have, operator, want)
+    didPass, operator_ := compare(have, operator, want)
     // FIXME Confusing
     test.operator = operator_.operator
 	return self.hadResult(didPass, test, func() {
@@ -233,7 +235,7 @@ func (self *Tester) AtCompare(callDepth int, left interface{}, operator string, 
     operator = strings.TrimSpace(operator)
 	test := newTest("Compare "+operator, callDepth+1, left, right, arguments)
 	test.operator = operator
-	didPass, operator_, _ := compare(left, operator, right)
+	didPass, operator_ := compare(left, operator, right)
     // FIXME Confusing
     test.operator = operator_.operator
 	return self.hadResult(didPass, test, func() {
@@ -284,7 +286,7 @@ func newCompareOperator(operatorString string) compareOperator {
     return compareOperator{scope, operator}
 }
 
-func compare(left interface{}, operatorString string, right interface{}) (bool, compareOperator, error) {
+func compare(left interface{}, operatorString string, right interface{}) (bool, compareOperator) {
 	pass := true
     operator := newCompareOperator(operatorString)
     comparator := newComparator(left, operator, right)
@@ -295,23 +297,24 @@ func compare(left interface{}, operatorString string, right interface{}) (bool, 
     case "!=":
 		pass = !comparator.IsEqual()
 	default:
-		if !comparator.CanCompare() {
-			panic(fmt.Errorf("Comparison (%v) %v (%v) is invalid", left, operatorString, right))
-		}
-		switch operator.operator {
-        case "<":
-			pass = comparator.Compare() == -1
-        case "<=":
-			pass = comparator.Compare() <= 0
-        case ">":
-			pass = comparator.Compare() == 1
-        case ">+":
-			pass = comparator.Compare() >= 0
-		default:
-			panic(fmt.Errorf("Compare operator (%v) is invalid", operatorString))
-		}
+		if comparator.CanCompare() {
+            switch operator.operator {
+            case "<":
+                pass = comparator.Compare() == -1
+            case "<=":
+                pass = comparator.Compare() <= 0
+            case ">":
+                pass = comparator.Compare() == 1
+            case ">=":
+                pass = comparator.Compare() >= 0
+            default:
+                panic(fmt.Errorf("Compare operator (%v) is invalid", operator.operator))
+            }
+        } else {
+            pass = false
+        }
 	}
-	return pass, operator, nil
+	return pass, operator
 }
 
 // Compare / Comparator
@@ -415,7 +418,7 @@ type interfaceComparator struct {
 	right interface{}
 }
 func (self *interfaceComparator) IsEqual() bool {
-	return self.left == self.right
+	return reflect.DeepEqual(self.left, self.right)
 }
 
 type floatComparator struct {
@@ -556,9 +559,9 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
         case compareSame:
             mismatch = ! isSame
         case compareSibling:
-            mismatch = ! isSibling
+            mismatch = ! isSame && ! isSibling
         case compareFamily:
-            mismatch = ! isFamily
+            mismatch = ! isSame && ! isSibling && ! isFamily
         }
         if mismatch {
             targetKind = kindInterface
