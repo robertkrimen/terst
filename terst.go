@@ -483,11 +483,11 @@ func (self *booleanComparator) isEqual() bool {
 }
 
 func newComparator(left interface{}, operator compareOperator, right interface{}) (ofComparator, error) {
-	leftValue, leftKind := comparatorValue(left)
+	leftValue, _ := comparatorValue(left)
 	rightValue, rightKind := comparatorValue(right)
 
     targetKind := kindInvalid
-    same := leftKind == rightKind
+    same := rightValue.Kind() == leftValue.Kind()
     sibling := false
     family := false
     if same {
@@ -538,7 +538,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
         }
     }
 
-    fmt.Println("%v %v %v %v %s %s", operator.scope, same, sibling, family, leftValue, rightValue)
+    /*fmt.Println("%v %v %v %v %s %s", operator.scope, same, sibling, family, leftValue, rightValue)*/
     switch operator.scope {
     case compareSame:
         if ! same {

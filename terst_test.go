@@ -39,7 +39,7 @@ func TestPass(t *testing.T) {
 	Compare(math.Inf(0), ">", 2)
 
 	Compare(1, "#= ==", 1)
-	Compare(1, "#= ==", int32(1))
+	Compare(1, "#~ ==", int32(1))
 	return
 
 	// Is coerce
