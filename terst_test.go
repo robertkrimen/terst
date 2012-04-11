@@ -12,6 +12,13 @@ func (self Xyzzy) String() string {
 	return "Nothing happens."
 }
 
+func TestDuJour(t *testing.T) {
+	Terst(t)
+	if false {
+		Is(1, 2, "Hello, World.")
+	}
+}
+
 func TestIsWithoutTerst(t *testing.T) {
 	// The following will panic
 	// UnTerst()
@@ -50,6 +57,8 @@ func TestCompare(t *testing.T) {
 		// This will not parse/compile because of a type mismatch
 		// Pass(float32(1.1) < int(2))
 	}
+	Compare(&Xyzzy{}, "!=", 1)
+	Compare(1, "!=", Xyzzy{})
 }
 
 func TestCompareOperator(t *testing.T) {

@@ -1,5 +1,8 @@
 terst - A terse, easy-to-use testing library for Go (golang)
 
+DESCRIPTION
+
+
 SYNOPSIS
 
     import (
@@ -46,11 +49,12 @@ USAGE
         Passing is if result is false 
 
     Is( have interface{}, want string )
-        Convert have to a string (via fmt.Sprintf("%v")) and test against want via ==
+        Convert have to a string (via fmt.Sprintf("%v")) and test
+        against want via ==
 
     Is( have interface{}, want interface{} )
         A shortcut for: Compare(have, "==", want)
-        If a slice ([]type), struct, or similar is passed in, Is will perform
+        If have/want is a slice ([]type), struct, or similar, Is will perform
         a reflect.DeepEqual() comparison
 
     IsNot( ... )
@@ -63,7 +67,7 @@ USAGE
 
     Like( have interface{}, want interface{} )
         A shortcut for: Compare( have, "{}~ ==", want )
-        If a slice ([]type), struct, or similar is passed in, Like will perform
+        If have/want is a slice ([]type), struct, or similar, Like will perform
         a reflect.DeepEqual() comparison
 
     Unike( have interface{}, want string )

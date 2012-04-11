@@ -655,7 +655,7 @@ func (self *Tester) failMessageForEqual(test *test) string {
 
 func (self *Tester) failMessageForIs(test *test) string {
 	return self.FormatMessage(`
-        %s:%d: %s 
+        %s:%d: %v
            Failed test (%s)
                   got: %v%s
              expected: %v%s
@@ -822,7 +822,7 @@ type test struct {
 	function   string
 }
 
-func newTest(kind string, callDepth int, have, want interface{}, arguments ...interface{}) *test {
+func newTest(kind string, callDepth int, have, want interface{}, arguments []interface{}) *test {
 	file, line, functionPC, function, _ := AtFileLineFunction(callDepth + 1)
 	operator := newCompareOperator("")
 	return &test{kind, have, want, arguments, operator, file, line, functionPC, function}
@@ -830,8 +830,9 @@ func newTest(kind string, callDepth int, have, want interface{}, arguments ...in
 
 func (self *test) Description() string {
 	description := ""
-	if len(self.arguments) > 0 {
-		description = fmt.Sprintf("%s", self.arguments...)
+	arguments := self.arguments
+	if len(arguments) > 0 {
+		description = fmt.Sprintf("%s", arguments[0])
 	}
 	return description
 }
