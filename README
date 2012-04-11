@@ -61,14 +61,15 @@ USAGE
         Same behavior as with Is but with the opposite result
 
     Like( have interface{}, want string )
-        A regular expression test. Convert have to a string (via fmt.Sprintf("%v"))
-        and test against the regular expression specified by want
+        A regular expression test. Convert have to a string
+        (via fmt.Sprintf("%v")) and test against the regular
+        expression specified by want
         Passing is a match: The result of regexp.Match( ... ) is true
 
     Like( have interface{}, want interface{} )
         A shortcut for: Compare( have, "{}~ ==", want )
-        If have/want is a slice ([]type), struct, or similar, Like will perform
-        a reflect.DeepEqual() comparison
+        If have/want is a slice ([]type), struct, or similar, Like
+        will perform a reflect.DeepEqual() comparison
 
     Unike( have interface{}, want string )
         Same behavior as with Like but with the opposite result
@@ -87,13 +88,15 @@ USAGE
             >
             >=
 
-        Compare (in the default mode) is not strict when comparing numeric types, and
-        will make a best effort to promote have and want to the same type
+        Compare (in the default mode) is not strict when comparing numeric
+        types, and will make a best effort to promote have and want to the
+        same type
 
-        Compare will promote int* and uint* to math/big.Int for testing against
-        eachother
+        Compare will promote int* and uint* to math/big.Int for testing
+        against eachother
 
-        Compare will promote int*, uint*, and float32 to float64 for float testing 
+        Compare will promote int*, uint*, and float32 to float64 for
+        float testing
 
         For example, Compare(float32(1.0), "<", int8(2)) is a valid test
         The expression equivalent (result := float32(1.0) < int8(2)) will not
