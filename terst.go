@@ -149,7 +149,7 @@ func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface
 	case string:
         didPass = ToString(have) == want
     default:
-        didPass, _ = compare(have, "#~ ==", want)
+        didPass, _ = compare(have, "#* ==", want)
 	}
     if !wantIs {
         didPass = !didPass
@@ -208,7 +208,7 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 			self.Log(self.failMessageForMatch(test, ToString(have), ToString(want), wantLike))
 		})
 	}
-    didPass, operator := compare(have, "#* ==", want)
+    didPass, operator := compare(have, "#~ ==", want)
 	if !wantLike {
 		didPass = !didPass
 	}

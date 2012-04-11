@@ -22,7 +22,7 @@ func TestNewCompareOperator(t *testing.T) {
 	isTesting = false
 	test := func(input string, expect []string) {
 		result := newCompareOperatorRE.FindStringSubmatch(input)
-		Like(result[1:], expect)
+		Is(result[1:], expect)
 	}
 	test("#= ==", []string{"#=", "=="})
 	test("  {}* ==", []string{"{}*", "=="})
