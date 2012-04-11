@@ -27,12 +27,20 @@ func TestNewCompareOperator(t *testing.T) {
 func TestCompareOperator(t *testing.T) {
 	Terst(t)
 
-    operator := newCompareOperator("#= ==")
+	operator := newCompareOperator("#= ==")
 	Is(operator.scope, compareScopeEqual)
 	Is(operator.comparison, "==")
 }
 
-func TestPass(t *testing.T) {
+func TestIs(t *testing.T) {
+	Terst(t)
+
+	Is(true, "true")
+	Is(1, "1")
+	Is(Apple{}, "This is an Apple object")
+}
+
+func TestPassing(t *testing.T) {
 	Terst(t).EnableSelfTesting()
 	Is(1, 1)
 	Compare(1, "==", 1.0)
@@ -45,15 +53,7 @@ func TestPass(t *testing.T) {
 	Compare(1, "#= ==", 1)
 }
 
-func TestIs(t *testing.T) {
-	Terst(t)
-
-	Is(true, "true")
-	Is(1, "1")
-	Is(Apple{}, "This is an Apple object")
-}
-
-func TestFail(t *testing.T) {
+func TestFailing(t *testing.T) {
 	Terst(t).EnableSelfTesting().FailIsPass()
 	Unlike("apple", `pp`)
 	Like(1, 1.1)
