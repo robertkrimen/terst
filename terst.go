@@ -144,7 +144,7 @@ func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface
 	didPass := false
 	switch want.(type) {
 	case string:
-		didPass = ToString(have) == want
+		didPass = stringValue(have) == want
 	default:
 		didPass, _ = compare(have, "{}* ==", want)
 	}
@@ -192,7 +192,7 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 	didPass := false
 	switch want0 := want.(type) {
 	case string:
-		haveString := ToString(have)
+		haveString := stringValue(have)
 		didPass, error := regexp.Match(want0, []byte(haveString))
 		if !wantLike {
 			didPass = !didPass
@@ -202,7 +202,7 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 		}
 		want = fmt.Sprintf("(?:%v)", want) // Make it look like a regular expression
 		return self.hadResult(didPass, test, func() {
-			self.Log(self.failMessageForMatch(test, ToString(have), ToString(want), wantLike))
+			self.Log(self.failMessageForMatch(test, stringValue(have), stringValue(want), wantLike))
 		})
 	}
 	didPass, operator := compare(have, "{}~ ==", want)
@@ -211,7 +211,7 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 	}
 	test.operator = operator
 	return self.hadResult(didPass, test, func() {
-		self.Log(self.failMessageForLike(test, ToString(have), ToString(want), wantLike))
+		self.Log(self.failMessageForLike(test, stringValue(have), stringValue(want), wantLike))
 	})
 }
 
@@ -623,7 +623,7 @@ func (self *Tester) failMessageForPass(test *test) string {
            Failed test (%s)
                   got: %s
              expected: %s
-    `, test.file, test.line, test.Description(), test.kind, ToString(test.have), ToString(test.want))
+    `, test.file, test.line, test.Description(), test.kind, stringValue(test.have), stringValue(test.want))
 }
 
 func typeKindString(value interface{}) string {
@@ -870,6 +870,6 @@ func floatValue(value interface{}) float64 {
 	return reflect.ValueOf(value).Float()
 }
 
-func ToString(value interface{}) string {
+func stringValue(value interface{}) string {
 	return fmt.Sprintf("%v", value)
 }

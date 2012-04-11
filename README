@@ -1,4 +1,4 @@
-terst - A terse, expressive, and easy-to-use testing library for Go (golang)
+terst - A terse, easy-to-use testing library for Go (golang)
 
 DESCRIPTION
 
@@ -43,7 +43,7 @@ USAGE
 
     Is( have interface{}, want interface{} )
         A shortcut for: Compare(have, "==", want)
-        If a slice[], struct, or similar is passed in, Is in this mode will perform
+        If a slice ([]type), struct, or similar is passed in, Is will perform
         a reflect.DeepEqual() comparison
 
     IsNot( ... )
@@ -56,7 +56,7 @@ USAGE
 
     Like( have interface{}, want interface{} )
         A shortcut for: Compare( have, "{}~ ==", want )
-        If a slice[], struct, or similar is passed in, Like in this mode will perform
+        If a slice ([]type), struct, or similar is passed in, Like will perform
         a reflect.DeepEqual() comparison
 
     Unike( have interface{}, want string )
@@ -64,7 +64,7 @@ USAGE
         Passing is a mismatch: The result of regexp.Match( ... ) is false
 
     Unlike( have interface{}, want interface{} )
-        A shortcut for: Compare( have, "!=", want )
+        A shortcut for: Compare( have, "{}~ !=", want )
 
     Compare( have interface{}, operator string, want interface{} )
         Compare have to want using the specified operator
@@ -79,10 +79,14 @@ USAGE
         Compare (in the default mode) is not strict when comparing numeric types, and
         will make a best effort to promote have and want to the same type
 
-        Compare will promote int* and uint* to math/big.Int for testing
+        Compare will promote int* and uint* to math/big.Int for testing against
+        eachother
+
+        Compare will promote int*, uint*, and float32 to float64 for float testing 
 
         For example, Compare(float32(1.0), "<", int8(2)) is a valid test
-        The expression equivalent will not parse because of a type mismatch
+        The expression equivalent (result := float32(1.0) < int8(2)) will not
+        parse/compile because of a type mismatch
 
     * Each of the methods above can take one additional (optional) argument,
     which is a string describing the test. If the test fails, this
@@ -92,7 +96,7 @@ USAGE
         Is(2 + 2, float32(5), "This result is Doubleplusgood")
 
         --- FAIL: Test (0.00 seconds)
-             synopsis_test.go:17: This result is Doubleplusgood
+             test.go:17: This result is Doubleplusgood
                 Failed test (Is)
                        got: 4 (int)
                   expected: 5 (float64)
