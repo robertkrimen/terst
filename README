@@ -121,3 +121,4 @@ FUTURE
 - Add Same() for testing via .DeepEqual && == (without panicking?)
 - Add StrictCompare to use {}= scoping
 - Add BigCompare for easier math/big.Int testing?
+- Support the complex type in Compare()
