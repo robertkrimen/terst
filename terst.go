@@ -697,7 +697,7 @@ type Tester struct {
 	FailIsPassing  bool
 }
 
-var _ourTester *Tester = nil
+var ourTester *Tester = nil
 
 func testFunctionEntry() uintptr {
 	height := 2
@@ -719,28 +719,28 @@ func testFunctionEntry() uintptr {
 
 func Terst(arguments ...interface{}) *Tester {
 	if len(arguments) == 0 {
-		_ourTester = nil
+		ourTester = nil
 	} else {
-		_ourTester = NewTester(arguments[0].(*testing.T))
-		_ourTester.EnableSanityChecking()
-		_ourTester.TestEntry = testFunctionEntry()
+		ourTester = NewTester(arguments[0].(*testing.T))
+		ourTester.EnableSanityChecking()
+		ourTester.TestEntry = testFunctionEntry()
 	}
-	return _ourTester
+	return ourTester
 }
 
 func UnTerst() {
-	_ourTester = nil
+	ourTester = nil
 }
 
 func OurTester() *Tester {
-	if _ourTester == nil {
-		panic("_ourTester == nil")
+	if ourTester == nil {
+		panic("ourTester == nil")
 	}
-	return _ourTester.CheckSanity()
+	return ourTester.CheckSanity()
 }
 
 func HaveTester() bool {
-	return _ourTester != nil
+	return ourTester != nil
 }
 
 // Tester
