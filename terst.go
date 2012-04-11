@@ -253,34 +253,30 @@ type compareOperator struct {
     comparison string
 }
 
+var newCompareOperatorRE *regexp.Regexp = regexp.MustCompile(`^\s*(?:((?:{}|#)[*~=])\s+)?(==|!=|<|<=|>|>=)\s*$`)
+
 func newCompareOperator(operatorString string) compareOperator {
 
     if operatorString == "" {
         return compareOperator{compareScopeEqual, ""}
     }
 
-    operator := operatorString
-    scope := compareScopeAsterisk
-    if index := strings.Index(operator, "#*"); index != -1 {
-        operator = operator[index+2:]
-    } else if index := strings.Index(operator, "#~"); index != -1 {
-        scope = compareScopeTilde
-        operator = operator[index+2:]
-    } else if index := strings.Index(operator, "#="); index != -1 {
-        scope = compareScopeEqual
-        operator = operator[index+2:]
+    result := newCompareOperatorRE.FindStringSubmatch(operatorString)
+    if result == nil {
+        panic(fmt.Errorf("Unable to parse %v into a compareOperator", operatorString));
     }
 
-    comparison := strings.TrimSpace(operator)
-    switch comparison {
-    case "==":
-    case "!=":
-    case "<":
-    case "<=":
-    case ">":
-    case ">=":
-    default:
+    scope := compareScopeAsterisk
+    switch result[1] {
+    case "#*", "{}*":
+        scope = compareScopeAsterisk
+    case "#~", "{}~":
+        scope = compareScopeTilde
+    case "#=", "{}=":
+        scope = compareScopeEqual
     }
+
+    comparison := result[2]
 
     return compareOperator{scope, comparison}
 }
