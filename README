@@ -25,9 +25,12 @@ USAGE
 
     Equal( have interface{}, want interface{} )
         Test have against want via ==
+        No special coercion or type inspection is done
+        If the type is incomparable this will panic
 
     Unequal( ... )
-        Same behavior as with Equal but with the opposite result
+        Test have against want via !=
+        Like Equal, no special coercion or type inspection is done
 
     Pass( result bool )
         Passing is if result is true 
