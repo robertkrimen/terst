@@ -12,15 +12,14 @@ import (
 	"unsafe"
 )
 
-var (
-	expectResult bool
-	isTesting    bool = false
-)
-
 func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
-	if isTesting {
-		if expectResult != result {
-			self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expectResult, result, test.kind, test.have, test.want))
+	if self.SelfTesting {
+        expect := true
+        if self.FailIsPassing {
+            expect = false
+        }
+		if expect != result {
+			self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expect, result, test.kind, test.have, test.want))
 			onFail()
 			self.fail()
 		}
@@ -684,9 +683,11 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 // ...
 
 type Tester struct {
-	TestingT    *testing.T
-	TestEntry   uintptr
-	sanityCheck bool
+	TestingT *testing.T
+	TestEntry uintptr
+	SanityChecking bool
+    SelfTesting bool
+    FailIsPassing bool
 }
 
 var _ourTester *Tester = nil
@@ -714,10 +715,8 @@ func Terst(arguments ...interface{}) *Tester {
 		_ourTester = nil
 	} else {
 		_ourTester = NewTester(arguments[0].(*testing.T))
-		_ourTester.sanityCheck = true
-		if _ourTester.sanityCheck {
-			_ourTester.TestEntry = testFunctionEntry()
-		}
+		_ourTester.EnableSanityChecking()
+        _ourTester.TestEntry = testFunctionEntry()
 	}
 	return _ourTester
 }
@@ -740,7 +739,7 @@ func HaveTester() bool {
 // Tester
 
 func NewTester(t *testing.T) *Tester {
-	return &Tester{t, 0, true}
+	return &Tester{t, 0, false, false, false}
 }
 
 func (self *Tester) FormatMessage(format string, arguments ...interface{}) string {
@@ -761,18 +760,38 @@ func (self *Tester) fail() {
 	self.TestingT.Fail()
 }
 
-func (self *Tester) EnableSanityCheck() *Tester {
-    self.sanityCheck = true
+func (self *Tester) EnableSanityChecking() *Tester {
+    self.SanityChecking = true
     return self
 }
 
-func (self *Tester) DisableSanityCheck() *Tester {
-    self.sanityCheck = false
+func (self *Tester) DisableSanityChecking() *Tester {
+    self.SanityChecking = false
+    return self
+}
+
+func (self *Tester) EnableSelfTesting() *Tester {
+    self.SelfTesting = true
+    return self
+}
+
+func (self *Tester) DisableSelfTesting() *Tester {
+    self.SelfTesting = false
+    return self
+}
+
+func (self *Tester) FailIsPass() *Tester {
+    self.FailIsPassing = true
+    return self
+}
+
+func (self *Tester) PassIsPass() *Tester {
+    self.FailIsPassing = false
     return self
 }
 
 func (self *Tester) CheckSanity() *Tester {
-	if self.sanityCheck && self.TestEntry != 0 {
+	if self.SanityChecking && self.TestEntry != 0 {
 		foundEntry := testFunctionEntry()
 		if self.TestEntry != foundEntry {
 			panic(fmt.Errorf("TestEntry(%v) does not match foundEntry(%v): Did you call Terst when entering a new Test* function?", self.TestEntry, foundEntry))
