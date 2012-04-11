@@ -13,8 +13,6 @@ import (
 )
 
 var (
-	SanityCheck bool = true
-
 	expectResult bool
 	isTesting    bool = false
 )
@@ -716,7 +714,7 @@ func Terst(arguments ...interface{}) *Tester {
 		_ourTester = nil
 	} else {
 		_ourTester = NewTester(arguments[0].(*testing.T))
-		_ourTester.sanityCheck = SanityCheck
+		_ourTester.sanityCheck = true
 		if _ourTester.sanityCheck {
 			_ourTester.TestEntry = testFunctionEntry()
 		}
@@ -732,7 +730,7 @@ func OurTester() *Tester {
 	if _ourTester == nil {
 		panic("_ourTester == nil")
 	}
-	return _ourTester.checkSanity()
+	return _ourTester.CheckSanity()
 }
 
 func HaveTester() bool {
@@ -763,7 +761,17 @@ func (self *Tester) fail() {
 	self.TestingT.Fail()
 }
 
-func (self *Tester) checkSanity() *Tester {
+func (self *Tester) EnableSanityCheck() *Tester {
+    self.sanityCheck = true
+    return self
+}
+
+func (self *Tester) DisableSanityCheck() *Tester {
+    self.sanityCheck = false
+    return self
+}
+
+func (self *Tester) CheckSanity() *Tester {
 	if self.sanityCheck && self.TestEntry != 0 {
 		foundEntry := testFunctionEntry()
 		if self.TestEntry != foundEntry {

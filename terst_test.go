@@ -8,7 +8,6 @@ import (
 
 func init() {
 	isTesting = true
-	SanityCheck = true
 }
 
 type Apple struct{}
