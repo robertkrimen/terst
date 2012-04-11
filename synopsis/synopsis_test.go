@@ -14,4 +14,5 @@ func Test(t *testing.T) {
     Is(1, 1.0) // Fail: comparing an integer to a float
     Compare(1, "==", 1.0) // Pass
     Like(1, 1.0) // Pass
+	Is(2 + 2, 5.0, "Doubleplusgood")
 }

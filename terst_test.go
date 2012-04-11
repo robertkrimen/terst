@@ -39,6 +39,11 @@ func TestCompare(t *testing.T) {
 	}
 	Compare(&Xyzzy{}, "==", &Xyzzy{})
 	Compare(&Xyzzy{}, "{}= !=", &Xyzzy{})
+	Compare(float32(1.1), "<", int8(2))
+	if false {
+		// This will not parse/compile because of a type mismatch
+		// Pass(float32(1.1) < int(2))
+	}
 }
 
 func TestCompareOperator(t *testing.T) {

@@ -43,6 +43,8 @@ USAGE
 
     Is( have interface{}, want interface{} )
         A shortcut for: Compare(have, "==", want)
+        If a slice[], struct, or similar is passed in, Is in this mode will perform
+        a reflect.DeepEqual() comparison
 
     IsNot( ... )
         Same behavior as with Is but with the opposite result
@@ -54,6 +56,8 @@ USAGE
 
     Like( have interface{}, want interface{} )
         A shortcut for: Compare( have, "{}~ ==", want )
+        If a slice[], struct, or similar is passed in, Like in this mode will perform
+        a reflect.DeepEqual() comparison
 
     Unike( have interface{}, want string )
         Same behavior as with Like but with the opposite result
@@ -72,13 +76,27 @@ USAGE
             >
             >=
 
-        Compare is not strict when comparing numeric types, and
-        will make a best effort to promote have and want to the
-        same type
+        Compare (in the default mode) is not strict when comparing numeric types, and
+        will make a best effort to promote have and want to the same type
+
+        Compare will promote int* and uint* to math/big.Int for testing
+
+        For example, Compare(float32(1.0), "<", int8(2)) is a valid test
+        The expression equivalent will not parse because of a type mismatch
 
     * Each of the methods above can take one additional (optional) argument,
     which is a string describing the test. If the test fails, this
     description will be included with the test output
+    For example:
+
+        Is(2 + 2, float32(5), "This result is Doubleplusgood")
+
+        --- FAIL: Test (0.00 seconds)
+             synopsis_test.go:17: This result is Doubleplusgood
+                Failed test (Is)
+                       got: 4 (int)
+                  expected: 5 (float64)
+
 
 AUTHOR
     Robert Krimen <robertkrimen@gmail.com>
@@ -86,3 +104,5 @@ AUTHOR
 FUTURE
 - Add Catch() for testing panic()
 - Add Same() for testing via .DeepEqual && == (without panicking?)
+- Add StrictCompare to use {}= scoping
+- Add BigCompare for easier math/big.Int testing?
