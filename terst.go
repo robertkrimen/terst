@@ -2,7 +2,6 @@ package terst
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"reflect"
 	"regexp"
@@ -838,25 +837,5 @@ func floatValue(value interface{}) float64 {
 }
 
 func ToString(value interface{}) string {
-	return fmt.Sprintf("%v", value)
-	switch value0 := value.(type) {
-	case bool:
-		return fmt.Sprintf("%v", value)
-	case int, int8, int16, int32, int64:
-		return fmt.Sprintf("%v", value)
-	case uint, uint8, uint16, uint32, uint64:
-		return fmt.Sprintf("%v", value)
-	case string:
-		return fmt.Sprintf("%v", value)
-	case float32:
-		return fmt.Sprintf("%v", value)
-	case float64:
-		if math.IsNaN(value0) {
-			return "NaN"
-		} else if math.IsInf(value0, 0) {
-			return "Infinity"
-		}
-		return fmt.Sprintf("%v", value)
-	}
 	return fmt.Sprintf("%v", value)
 }
