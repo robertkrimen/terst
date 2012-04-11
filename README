@@ -84,4 +84,5 @@ AUTHOR
     Robert Krimen <robertkrimen@gmail.com>
 
 FUTURE
-- Add #=, #~, #* strictness tweaking to Compare
+- Add Catch() for testing panic()
+- Add Same() for testing via .DeepEqual && == (without panicking?)
