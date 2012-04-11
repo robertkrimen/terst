@@ -1,7 +1,5 @@
 terst - A terse, easy-to-use testing library for Go (golang)
 
-DESCRIPTION
-
 SYNOPSIS
 
     import (
@@ -22,6 +20,15 @@ SYNOPSIS
     }
 
 USAGE
+
+    Terst( *testing.T )
+
+        At the top of your func Test*() method, tell terst to use the
+        passed *testing.T by invoking this method.  You must do this
+        for each Test*()
+
+        terst will use the given *testing.T to log output and register
+        failures
 
     Equal( have interface{}, want interface{} )
         Test have against want via ==

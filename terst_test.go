@@ -12,6 +12,12 @@ func (self Xyzzy) String() string {
 	return "Nothing happens."
 }
 
+func TestIsWithoutTerst(t *testing.T) {
+	// The following will panic
+	// UnTerst()
+	// Is(1, 1)
+}
+
 func TestNewCompareOperator(t *testing.T) {
 	Terst(t)
 	test := func(input string, expect []string) {
