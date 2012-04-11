@@ -6,10 +6,10 @@ import (
 	"math"
 )
 
-type Apple struct{}
+type Xyzzy struct{}
 
-func (self Apple) String() string {
-	return "This is an Apple object"
+func (self Xyzzy) String() string {
+	return "Nothing happens."
 }
 
 func TestNewCompareOperator(t *testing.T) {
@@ -22,6 +22,23 @@ func TestNewCompareOperator(t *testing.T) {
 	test("  {}* ==", []string{"{}*", "=="})
 	test("  {}* ==  ", []string{"{}*", "=="})
 	test("   ==  ", []string{"", "=="})
+}
+
+func TestCompare(t *testing.T) {
+	Terst(t)
+	Compare([]string{""}, "==", []string{""})
+	Compare([]string{""}, "!=", []string{"Xyzzy"})
+	Compare([]string{""}, "{}* ==", []string{""})
+	Compare([]string{""}, "{}* !=", []string{"Xyzzy"})
+	Compare([]string{""}, "{}~ ==", []string{""})
+	Compare([]string{""}, "{}~ !=", []string{"Xyzzy"})
+	if false {
+		// These fail because you cannot do []type == []type
+		Compare([]string{""}, "{}= !=", []string{""})
+		Compare([]string{""}, "{}= !=", []string{"Xyzzy"})
+	}
+	Compare(&Xyzzy{}, "==", &Xyzzy{})
+	Compare(&Xyzzy{}, "{}= !=", &Xyzzy{})
 }
 
 func TestCompareOperator(t *testing.T) {
@@ -37,45 +54,50 @@ func TestIs(t *testing.T) {
 
 	Is(true, "true")
 	Is(1, "1")
-	Is(Apple{}, "This is an Apple object")
+	Is(Xyzzy{}, "Nothing happens.")
 }
 
 func TestPassing(t *testing.T) {
 	Terst(t).EnableSelfTesting()
+
 	Is(1, 1)
-	Compare(1, "==", 1.0)
 	Is("apple", "apple")
 	IsNot("apple", "orange")
+	Is(&Xyzzy{}, &Xyzzy{})
+
+	Compare(1, "==", 1.0)
 	Compare(1, "==", 1)
-	Compare(&Apple{}, "#* ==", &Apple{})
-	Is(&Apple{}, &Apple{})
+	Compare(&Xyzzy{}, "#* ==", &Xyzzy{})
 	Compare("abc", ">=", "abc")
 	Compare(1, "#= ==", 1)
 }
 
 func TestFailing(t *testing.T) {
 	Terst(t).EnableSelfTesting().FailIsPass()
-	Unlike("apple", `pp`)
+
+	Equal("apple", "orange")
+
+	Pass(false)
+	Fail(true)
+
+	Is("1", 1)
+	Is("true", true)
+	Is("1", 1)
+
 	Like(1, 1.1)
+	Unlike("apple", `pp`)
+
 	Compare(true, ">", false)
 	Compare(math.Inf(0), "==", 2)
-	Is("1", 1)
 	Compare("test", "#= ==", int32(1))
-
 	Compare(uint64(math.MaxUint64), "<", int64(math.MinInt32))
 	Compare("apple", "==", "banana")
 	Compare(false, "==", true)
 	Compare(uint(1), "==", int(2))
 	Compare(uint(1), "==", 1.1)
-	Equal("apple", "orange")
-	Pass(false)
-	Fail(true)
 	Compare(10, "<", 4.0)
 	Compare(6, ">", 6.0)
 	Compare("abcd", "<", "abc")
 	Compare("ab", ">=", "abc")
 
-	// Is coerce
-	Is("true", true)
-	Is("1", 1)
 }

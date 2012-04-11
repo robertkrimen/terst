@@ -423,7 +423,7 @@ type interfaceComparator struct {
 }
 
 func (self *interfaceComparator) IsEqual() bool {
-	if self.CompareScope() == compareScopeAsterisk {
+	if self.CompareScope() != compareScopeEqual {
 		return reflect.DeepEqual(self.left, self.right)
 	}
 	return self.left == self.right

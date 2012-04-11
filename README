@@ -39,7 +39,7 @@ USAGE
         Convert have to a string (via fmt.Sprintf("%v")) and test against want via ==
 
     Is( have interface{}, want interface{} )
-        Test have against want via ==
+        A shortcut for: Compare(have, "==", want)
 
     IsNot( ... )
         Same behavior as with Is but with the opposite result
@@ -50,7 +50,7 @@ USAGE
         Passing is a match: The result of regexp.Match( ... ) is true
 
     Like( have interface{}, want interface{} )
-        A shortcut for: Compare( have, "==", want )
+        A shortcut for: Compare( have, "{}~ ==", want )
 
     Unike( have interface{}, want string )
         Same behavior as with Like but with the opposite result
