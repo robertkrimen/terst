@@ -1,6 +1,7 @@
 package terst
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -22,8 +23,12 @@ func Test(t *testing.T) {
     Is(1, 1.0) // Fail: comparing an integer to a float
     Compare(1, "==", 1.0) // Pass
     Like(1, 1.0) // Pass
-	Is(2 + 2, 5.0, "Doubleplusgood")
+	Is(2 + 2, float32(5.0), "Doubleplusgood")
 
 	Compare(float32_3(), "<", uint8_5())
 	// Pass(float32_3() < uint8_5()) Will not compile
+
+	if false {
+		fmt.Printf("Xyzzy")
+	}
 }

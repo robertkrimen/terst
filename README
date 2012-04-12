@@ -2,6 +2,9 @@ terst - A terse, easy-to-use testing library for Go (golang)
 
 DESCRIPTION
 
+    * Provides the following testing methods:
+        Equal, Unequal, Pass, Fail, Is, IsNot, Like, Unlike, Compare
+    * Compatible with the provided testing package
 
 SYNOPSIS
 
@@ -102,10 +105,11 @@ USAGE
         The expression equivalent (result := float32(1.0) < int8(2)) will not
         parse/compile because of a type mismatch
 
-    * Each of the methods above can take one additional (optional) argument,
+    ---
+
+    Each of the methods above can take one additional (optional) argument,
     which is a string describing the test. If the test fails, this
-    description will be included with the test output
-    For example:
+    description will be included with the test output For example:
 
         Is(2 + 2, float32(5), "This result is Doubleplusgood")
 
@@ -113,8 +117,7 @@ USAGE
              test.go:17: This result is Doubleplusgood
                 Failed test (Is)
                        got: 4 (int)
-                  expected: 5 (float64)
-
+                  expected: 5 (float32)
 
 AUTHOR
     Robert Krimen <robertkrimen@gmail.com>
