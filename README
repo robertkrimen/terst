@@ -15,14 +15,20 @@ SYNOPSIS
 
     func Test(t *testing.T) {
         Terst(t) // Associate terst methods with t (the current testing.T)
-        Is("apple", "apple") // Pass
-        Is(1, "1") // Pass: 1 is converted to a string before testing
-        Is("apple", "orange") // Fail: emits nice-looking diagnostic 
-        Compare(1, ">", 0) // Pass
 
-        Is(1, 1.0) // Fail: comparing an integer to a float
+        Is(getApple(), "apple") // Pass
+        Is(getOrange(), "orange") // Fail: emits nice-looking diagnostic 
+
+        Compare(1, ">", 0) // Pass
         Compare(1, "==", 1.0) // Pass
-        Like(1, 1.0) // Pass
+    }
+
+    func getApple() string {
+        return "apple"
+    }
+
+    func getOrange() string {
+        return "apple" // Intentional mistake
     }
 
 USAGE
