@@ -128,3 +128,6 @@ FUTURE
 - Add StrictCompare to use {}= scoping
 - Add BigCompare for easier math/big.Int testing?
 - Support the complex type in Compare()
+- Equality test for NaN?
+- Better syntax for At*
+- Need IsType/TypeIs
