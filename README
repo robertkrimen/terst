@@ -4,7 +4,7 @@ DESCRIPTION
 
     * Provides the following testing methods:
         Equal, Unequal, Pass, Fail, Is, IsNot, Like, Unlike, Compare
-    * Compatible with the provided testing package
+    * Compatible with (and works via) the standard testing package
 
 SYNOPSIS
 
@@ -52,10 +52,10 @@ USAGE
         Like Equal, no special coercion or type inspection is done
 
     Pass( result bool )
-        Passing is if result is true 
+        Passing if result is true 
 
     Fail( result bool )
-        Passing is if result is false 
+        Passing if result is false 
 
     Is( have interface{}, want string )
         Convert have to a string (via fmt.Sprintf("%v")) and test
