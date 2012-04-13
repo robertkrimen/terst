@@ -125,6 +125,19 @@ USAGE
                        got: 4 (int)
                   expected: 5 (float32)
 
+INSTALL
+
+        $ go get -u github.com/robertkrimen/terst
+
+    Then, in your test file (e.g. xyzzy_test.go):
+
+        package xyzzy
+
+        import (
+            "testing"
+            . "github.com/robertkrimen/terst"
+        )
+
 AUTHOR
     Robert Krimen <robertkrimen@gmail.com>
 
