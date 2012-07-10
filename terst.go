@@ -1,6 +1,7 @@
 package terst
 
 import (
+	"os"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -837,15 +838,30 @@ func (self *test) Description() string {
 	return description
 }
 
+func findPathForFile(file string) string {
+	terstBase := os.ExpandEnv("$TERST_BASE")
+	if len(terstBase) > 0 && strings.HasPrefix(file, terstBase) {
+		file = file[len(terstBase):]
+		if file[0] == '/' || file[0] == '\\' {
+			file = file[1:]
+		}
+		return file
+	}
+
+	if index := strings.LastIndex(file, "/"); index >= 0 {
+		file = file[index+1:]
+	} else if index = strings.LastIndex(file, "\\"); index >= 0 {
+		file = file[index+1:]
+	}
+
+	return file
+}
+
 func AtFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
 	functionPC, file, line, good := runtime.Caller(callDepth + 1)
 	function := runtime.FuncForPC(functionPC).Name()
 	if good {
-		if index := strings.LastIndex(file, "/"); index >= 0 {
-			file = file[index+1:]
-		} else if index = strings.LastIndex(file, "\\"); index >= 0 {
-			file = file[index+1:]
-		}
+		file = findPathForFile(file)
 		if index := strings.LastIndex(function, ".Test"); index >= 0 {
 			function = function[index+1:]
 		}
