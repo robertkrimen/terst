@@ -66,7 +66,7 @@ func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments 
 	if want == false {
 		kind = "Fail"
 	}
-	test := newTest(kind, callDepth+1, have, want, arguments)
+	test := newTest(kind, self.AtCallDepth(callDepth), have, want, arguments)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForPass(test))
@@ -134,7 +134,7 @@ func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool
 }
 
 func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atIsOrIsNot(false, callDepth+1, have, want, arguments...)
+	return self.atIsOrIsNot(false, self.AtCallDepth(callDepth), have, want, arguments...)
 }
 
 func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
@@ -182,7 +182,7 @@ func (self *Tester) Unlike(have, want interface{}, arguments ...interface{}) boo
 }
 
 func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atLikeOrUnlike(false, callDepth+1, have, want, arguments...)
+	return self.atLikeOrUnlike(false, self.AtCallDepth(callDepth), have, want, arguments...)
 }
 
 func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
@@ -810,7 +810,7 @@ func (self *Tester) CheckSanity() *Tester {
 
 func (self *Tester) AtCallDepth(callDepth int) int {
 	if callDepth == -1 {
-		return self.FindDepth() + 1
+		return self.FindDepth() - 1 // depth - 1 (for AtCallDepth)
 	}
 	return callDepth + 1
 }
