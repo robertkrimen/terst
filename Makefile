@@ -1,7 +1,7 @@
 .PHONY: test synopsis
 
 test:
-	go test
+	go test .
 
 synopsis:
 	cd synopsis && go test

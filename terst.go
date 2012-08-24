@@ -44,7 +44,7 @@ func (self *Tester) Pass(have bool, arguments ...interface{}) bool {
 }
 
 func (self *Tester) AtPass(callDepth int, have bool, arguments ...interface{}) bool {
-	return self.atPassOrFail(true, callDepth+1, have, arguments...)
+	return self.atPassOrFail(true, self.AtCallDepth(callDepth), have, arguments...)
 }
 
 // Fail
@@ -58,7 +58,7 @@ func (self *Tester) Fail(have bool, arguments ...interface{}) bool {
 }
 
 func (self *Tester) AtFail(callDepth int, have bool, arguments ...interface{}) bool {
-	return self.atPassOrFail(false, callDepth+1, have, arguments...)
+	return self.atPassOrFail(false, self.AtCallDepth(callDepth), have, arguments...)
 }
 
 func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments ...interface{}) bool {
@@ -84,7 +84,7 @@ func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool
 }
 
 func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("==", callDepth+1, have, want, arguments)
+	test := newTest("==", self.AtCallDepth(callDepth), have, want, arguments)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForEqual(test))
@@ -102,7 +102,7 @@ func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bo
 }
 
 func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("!=", callDepth+1, have, want, arguments)
+	test := newTest("!=", self.AtCallDepth(callDepth), have, want, arguments)
 	didPass := have != want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
@@ -120,7 +120,7 @@ func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
 }
 
 func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atIsOrIsNot(true, callDepth+1, have, want, arguments...)
+	return self.atIsOrIsNot(true, self.AtCallDepth(callDepth), have, want, arguments...)
 }
 
 // IsNot
@@ -138,7 +138,7 @@ func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...
 }
 
 func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Is", callDepth+1, have, want, arguments)
+	test := newTest("Is", self.AtCallDepth(callDepth), have, want, arguments)
 	if !wantIs {
 		test.kind = "IsNot"
 	}
@@ -168,7 +168,7 @@ func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool 
 }
 
 func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atLikeOrUnlike(true, callDepth+1, have, want, arguments...)
+	return self.atLikeOrUnlike(true, self.AtCallDepth(callDepth), have, want, arguments...)
 }
 
 // Unlike
@@ -186,7 +186,7 @@ func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ..
 }
 
 func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Like", callDepth+1, have, want, arguments)
+	test := newTest("Like", self.AtCallDepth(callDepth), have, want, arguments)
 	if !wantLike {
 		test.kind = "Unlike"
 	}
@@ -228,7 +228,7 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 
 func (self *Tester) AtCompare(callDepth int, left interface{}, operatorString string, right interface{}, arguments ...interface{}) bool {
 	operatorString = strings.TrimSpace(operatorString)
-	test := newTest("Compare "+operatorString, callDepth+1, left, right, arguments)
+	test := newTest("Compare "+operatorString, self.AtCallDepth(callDepth), left, right, arguments)
 	didPass, operator := compare(left, operatorString, right)
 	test.operator = operator
 	return self.hadResult(didPass, test, func() {
@@ -806,6 +806,29 @@ func (self *Tester) CheckSanity() *Tester {
 		}
 	}
 	return self
+}
+
+func (self *Tester) AtCallDepth(callDepth int) int {
+	if callDepth == -1 {
+		return self.FindDepth() + 1
+	}
+	return callDepth + 1
+}
+
+func (self *Tester) FindDepth() int {
+	height := 1 // Skip us
+	for {
+		functionPC, _, _, good := runtime.Caller(height)
+		function := runtime.FuncForPC(functionPC)
+		if !good {
+			return 0
+		}
+		if function.Entry() == self.TestEntry {
+			return height - 1 // Not the surrounding test function, but within it
+		}
+		height += 1
+	}
+	return 0
 }
 
 // test

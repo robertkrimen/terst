@@ -2,7 +2,6 @@ package terst
 
 import (
 	"testing"
-	/*"fmt"*/
 	"math"
 )
 
@@ -120,4 +119,18 @@ func TestFailing(t *testing.T) {
 	Compare("abcd", "<", "abc")
 	Compare("ab", ">=", "abc")
 
+}
+
+func TestUnknownDepth(t *testing.T) {
+	terst := Terst(t)
+	IsNot(terst, "")
+	func(){
+		func(){
+			func(){
+				func(){
+					terst.Is(terst.FindDepth(), 4)
+				}()
+			}()
+		}()
+	}()
 }
