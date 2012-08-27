@@ -810,7 +810,7 @@ func (self *Tester) CheckSanity() *Tester {
 
 func (self *Tester) AtCallDepth(callDepth int) int {
 	if callDepth == -1 {
-		return self.FindDepth() - 1 // depth - 1 (for AtCallDepth)
+		return self.FindDepth() + -1 // depth - 1 (for AtCallDepth)
 	}
 	return callDepth + 1
 }
@@ -818,17 +818,29 @@ func (self *Tester) AtCallDepth(callDepth int) int {
 func (self *Tester) FindDepth() int {
 	height := 1 // Skip us
 	for {
-		functionPC, _, _, good := runtime.Caller(height)
-		function := runtime.FuncForPC(functionPC)
-		if !good {
-			return 0
+		pc, _, _, ok := runtime.Caller(height)
+		function := runtime.FuncForPC(pc)
+		if !ok {
+			// Got too close to the sun
+			if false {
+				for ; height > 0; height-- {
+					pc, _, _, ok := runtime.Caller(height)
+					fmt.Printf("[%d %v %v]", height, pc, ok)
+					if ok {
+						function := runtime.FuncForPC(pc)
+						fmt.Printf(" => [%s]", function.Name())
+					}
+					fmt.Printf("\n")
+				}
+			}
+			return 1
 		}
 		if function.Entry() == self.TestEntry {
 			return height - 1 // Not the surrounding test function, but within it
 		}
 		height += 1
 	}
-	return 0
+	return 1
 }
 
 // test
