@@ -140,8 +140,7 @@ func testDepth1() {
 }
 
 func testDepth0() {
-	Terst().Pin()
-	defer Terst().Unpin()
+	Terst().Focus()
 
 	if true {
 		testDepth1()
@@ -154,7 +153,9 @@ func testDepth0() {
 func TestDepth(t *testing.T) {
 	Terst(t)
 
-	if false {
+	if true {
 		testDepth0()
+
+		Is(0, 1)
 	}
 }

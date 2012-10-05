@@ -704,7 +704,7 @@ type Tester struct {
 	FailIsPassing  bool
 
 	testEntry uintptr
-	pinEntry uintptr
+	focusEntry uintptr
 }
 
 var ourTester *Tester = nil
@@ -727,16 +727,12 @@ func findTestEntry() uintptr {
 	return 0
 }
 
-func (self *Tester) Pin() {
+func (self *Tester) Focus() {
 	pc, _, _, ok := runtime.Caller(1)
 	if ok {
 		function := runtime.FuncForPC(pc)
-		self.pinEntry = function.Entry()
+		self.focusEntry = function.Entry()
 	}
-}
-
-func (self *Tester) Unpin() {
-	self.pinEntry = self.testEntry
 }
 
 func Terst(arguments ...interface{}) *Tester {
@@ -749,7 +745,7 @@ func Terst(arguments ...interface{}) *Tester {
 		ourTester = NewTester(arguments[0].(*testing.T))
 		ourTester.EnableSanityChecking()
 		ourTester.testEntry = findTestEntry()
-		ourTester.pinEntry = ourTester.testEntry
+		ourTester.focusEntry = ourTester.testEntry
 	}
 	return ourTester
 }
@@ -862,7 +858,8 @@ func (self *Tester) FindDepth() int {
 			}
 			return 1
 		}
-		if function.Entry() == self.pinEntry {
+		functionEntry := function.Entry()
+		if functionEntry == self.focusEntry || functionEntry == self.testEntry {
 			return height - 1 // Not the surrounding test function, but within it
 		}
 		height += 1
