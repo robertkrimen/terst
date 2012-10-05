@@ -692,7 +692,7 @@ type Tester struct {
 	focusEntry uintptr
 }
 
-var ourTester *Tester = nil
+var terstTester *Tester = nil
 
 func findTestEntry() uintptr {
 	height := 2
@@ -722,28 +722,28 @@ func (self *Tester) Focus() {
 
 func Terst(arguments ...interface{}) *Tester {
 	if len(arguments) == 0 {
-		if ourTester == nil {
-			panic("ourTester == nil")
+		if terstTester == nil {
+			panic("terstTester == nil")
 		}
-		return ourTester
+		return terstTester
 	} else {
-		ourTester = NewTester(arguments[0].(*testing.T))
-		ourTester.enableSanityChecking()
-		ourTester.testEntry = findTestEntry()
-		ourTester.focusEntry = ourTester.testEntry
+		if arguments[0] == nil {
+			terstTester = nil
+			return nil
+		}
+		terstTester = NewTester(arguments[0].(*testing.T))
+		terstTester.enableSanityChecking()
+		terstTester.testEntry = findTestEntry()
+		terstTester.focusEntry = terstTester.testEntry
 	}
-	return ourTester
-}
-
-func UnTerst() {
-	ourTester = nil
+	return terstTester
 }
 
 func OurTester() *Tester {
-	if ourTester == nil {
-		panic("ourTester == nil")
+	if terstTester == nil {
+		panic("terstTester == nil")
 	}
-	return ourTester.checkSanity()
+	return terstTester.checkSanity()
 }
 
 // Tester
