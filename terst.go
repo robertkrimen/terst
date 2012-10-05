@@ -1,4 +1,50 @@
 /* 
+Package terst is a terse (terst = test + terse), easy-to-use testing library for Go.
+
+In addition, terst is compatible with (and works via) the standard testing package.
+
+	import (
+		"testing"
+		. "terst"
+	)
+
+	func Test(t *testing.T) {
+		Terst(t) // Associate terst methods with t (the current testing.T)
+
+		Is(getApple(), "apple") // Pass
+		Is(getOrange(), "orange") // Fail: emits nice-looking diagnostic 
+
+		Compare(1, ">", 0) // Pass
+		Compare(1, "==", 1.0) // Pass
+	}
+
+	func getApple() string {
+		return "apple"
+	}
+
+	func getOrange() string {
+		return "apple" // Intentional mistake
+	}
+
+At the top of your testing function, call Terst(), passing the testing.T you receive as the first argument:
+
+	func TestExample(t *testing.T) {
+		Terst(t)
+		...
+	}
+
+After you initialize with the given *testing.T, you can use the following to test:
+
+	Is
+	IsNot
+	Equal
+	Unequal
+	IsTrue
+	IsFalse
+	Like
+	Unlike
+	Compare
+
 */
 package terst
 
