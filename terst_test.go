@@ -77,7 +77,7 @@ func TestIs(t *testing.T) {
 }
 
 func TestPassing(t *testing.T) {
-	Terst(t).EnableSelfTesting()
+	Terst(t).enableSelfTesting()
 
 	Is(1, 1)
 	Is("apple", "apple")
@@ -92,7 +92,7 @@ func TestPassing(t *testing.T) {
 }
 
 func TestFailing(t *testing.T) {
-	Terst(t).EnableSelfTesting().FailIsPass()
+	Terst(t).enableSelfTesting().failIsPass()
 
 	Equal("apple", "orange")
 
