@@ -606,7 +606,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
 
 func (self *Tester) failMessageForPass(test *test) string {
 	test.findFileLineFunction(self)
-	return self.FormatMessage(`
+	return formatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   got: %s
@@ -629,7 +629,7 @@ func typeKindString(value interface{}) string {
 
 func (self *Tester) failMessageForCompare(test *test) string {
 	test.findFileLineFunction(self)
-	return self.FormatMessage(`
+	return formatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   %v%s
@@ -644,7 +644,7 @@ func (self *Tester) failMessageForEqual(test *test) string {
 
 func (self *Tester) failMessageForIs(test *test) string {
 	test.findFileLineFunction(self)
-	return self.FormatMessage(`
+	return formatMessage(`
         %s:%d: %v
            Failed test (%s)
                   got: %v%s
@@ -658,7 +658,7 @@ func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch
 	if !wantMatch {
 		expect = "unlike"
 	}
-	return self.FormatMessage(`
+	return formatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   got: %v%s
@@ -671,7 +671,7 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 	if !wantLike {
 		want = "Anything else"
 	}
-	return self.FormatMessage(`
+	return formatMessage(`
         %s:%d: %s 
            Failed test (%s)
                   got: %v%s
@@ -758,8 +758,8 @@ func NewTester(t *testing.T) *Tester {
 	}
 }
 
-func (self *Tester) FormatMessage(format string, arguments ...interface{}) string {
-	message := fmt.Sprintf(format, arguments...)
+func formatMessage(message string, arguments ...interface{}) string {
+	message = fmt.Sprintf(message, arguments...)
 	message = strings.TrimLeft(message, "\n")
 	message = strings.TrimRight(message, " \n")
 	return message + "\n\n"
