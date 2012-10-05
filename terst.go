@@ -78,14 +78,14 @@ func (self *Tester) passOrFail(want bool, have bool, arguments ...interface{}) b
 // Equal
 
 func Equal(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtEqual(1, have, want, arguments...)
+	return OurTester().Equal(have, want, arguments...)
 }
 
 func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool {
-	return self.AtEqual(1, have, want, arguments...)
+	return self.equal(have, want, arguments...)
 }
 
-func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+func (self *Tester) equal(have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("==", have, want, arguments)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
@@ -96,14 +96,14 @@ func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...
 // Unequal
 
 func Unequal(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtUnequal(1, have, want, arguments...)
+	return OurTester().Unequal(have, want, arguments...)
 }
 
 func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bool {
-	return self.AtUnequal(1, have, want, arguments...)
+	return self.unequal(have, want, arguments...)
 }
 
-func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments ...interface{}) bool {
+func (self *Tester) unequal(have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("!=", have, want, arguments)
 	didPass := have != want
 	return self.hadResult(didPass, test, func() {
@@ -114,32 +114,24 @@ func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments .
 // Is
 
 func Is(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtIs(1, have, want, arguments...)
+	return OurTester().Is(have, want, arguments...)
 }
 
 func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
-	return self.AtIs(1, have, want, arguments...)
-}
-
-func (self *Tester) AtIs(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atIsOrIsNot(true, self.AtCallDepth(callDepth), have, want, arguments...)
+	return self.isOrIsNot(true, have, want, arguments...)
 }
 
 // IsNot
 
 func IsNot(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtIsNot(1, have, want, arguments...)
+	return OurTester().IsNot(have, want, arguments...)
 }
 
 func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool {
-	return self.AtIsNot(1, have, want, arguments...)
+	return self.isOrIsNot(false, have, want, arguments...)
 }
 
-func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atIsOrIsNot(false, self.AtCallDepth(callDepth), have, want, arguments...)
-}
-
-func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
+func (self *Tester) isOrIsNot(wantIs bool, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Is", have, want, arguments)
 	if !wantIs {
 		test.kind = "IsNot"
@@ -162,32 +154,24 @@ func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface
 // Like
 
 func Like(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtLike(1, have, want, arguments...)
+	return OurTester().Like(have, want, arguments...)
 }
 
 func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool {
-	return self.AtLike(1, have, want, arguments...)
-}
-
-func (self *Tester) AtLike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atLikeOrUnlike(true, self.AtCallDepth(callDepth), have, want, arguments...)
+	return self.likeOrUnlike(true, have, want, arguments...)
 }
 
 // Unlike
 
 func Unlike(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtUnlike(1, have, want, arguments...)
+	return OurTester().Unlike(have, want, arguments...)
 }
 
 func (self *Tester) Unlike(have, want interface{}, arguments ...interface{}) bool {
-	return self.AtUnlike(1, have, want, arguments...)
+	return self.likeOrUnlike(false, have, want, arguments...)
 }
 
-func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	return self.atLikeOrUnlike(false, self.AtCallDepth(callDepth), have, want, arguments...)
-}
-
-func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
+func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, arguments ...interface{}) bool {
 	test := newTest("Like", have, want, arguments)
 	if !wantLike {
 		test.kind = "Unlike"
@@ -221,14 +205,14 @@ func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want inte
 // Compare 
 
 func Compare(have interface{}, operator string, want interface{}, arguments ...interface{}) bool {
-	return OurTester().AtCompare(1, have, operator, want, arguments...)
+	return OurTester().Compare(have, operator, want, arguments...)
 }
 
 func (self *Tester) Compare(have interface{}, operator string, want interface{}, arguments ...interface{}) bool {
-	return self.AtCompare(1, have, operator, want, arguments...)
+	return self.compare(have, operator, want, arguments...)
 }
 
-func (self *Tester) AtCompare(callDepth int, left interface{}, operatorString string, right interface{}, arguments ...interface{}) bool {
+func (self *Tester) compare(left interface{}, operatorString string, right interface{}, arguments ...interface{}) bool {
 	operatorString = strings.TrimSpace(operatorString)
 	test := newTest("Compare "+operatorString, left, right, arguments)
 	didPass, operator := compare(left, operatorString, right)
@@ -829,13 +813,6 @@ func (self *Tester) CheckSanity() *Tester {
 		}
 	}
 	return self
-}
-
-func (self *Tester) AtCallDepth(callDepth int) int {
-	if callDepth == -1 {
-		return self.FindDepth() + -1 // depth - 1 (for AtCallDepth)
-	}
-	return callDepth + 1
 }
 
 func (self *Tester) FindDepth() int {
