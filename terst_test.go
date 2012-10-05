@@ -96,8 +96,8 @@ func TestFailing(t *testing.T) {
 
 	Equal("apple", "orange")
 
-	Pass(false)
-	Fail(true)
+	IsTrue(false)
+	IsFalse(true)
 
 	Is("1", 1)
 	Is("true", true)

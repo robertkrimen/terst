@@ -43,27 +43,27 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 	return result
 }
 
-// Pass
+// IsTrue
 
-func Pass(have bool, arguments ...interface{}) bool {
-	return terstTester().Pass(have, arguments...)
+func IsTrue(have bool, arguments ...interface{}) bool {
+	return terstTester().IsTrue(have, arguments...)
 }
 
-func (self *Tester) Pass(have bool, arguments ...interface{}) bool {
-	return self.passOrFail(true, have, arguments...)
+func (self *Tester) IsTrue(have bool, arguments ...interface{}) bool {
+	return self.trueOrFalse(true, have, arguments...)
 }
 
-// Fail
+// IsFalse
 
-func Fail(have bool, arguments ...interface{}) bool {
-	return terstTester().Fail(have, arguments...)
+func IsFalse(have bool, arguments ...interface{}) bool {
+	return terstTester().IsFalse(have, arguments...)
 }
 
-func (self *Tester) Fail(have bool, arguments ...interface{}) bool {
-	return self.passOrFail(false, have, arguments...)
+func (self *Tester) IsFalse(have bool, arguments ...interface{}) bool {
+	return self.trueOrFalse(false, have, arguments...)
 }
 
-func (self *Tester) passOrFail(want bool, have bool, arguments ...interface{}) bool {
+func (self *Tester) trueOrFalse(want bool, have bool, arguments ...interface{}) bool {
 	kind := "Pass"
 	if want == false {
 		kind = "Fail"
