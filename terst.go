@@ -871,7 +871,7 @@ func newTest(kind string, have, want interface{}, arguments []interface{}) *test
 }
 
 func (self *test) findFileLineFunction(tester *Tester) {
-	self.file, self.line, self.functionPC, self.function, _ = AtFileLineFunction(tester.FindDepth())
+	self.file, self.line, self.functionPC, self.function, _ = atFileLineFunction(tester.FindDepth())
 }
 
 func (self *test) Description() string {
@@ -902,20 +902,20 @@ func findPathForFile(file string) string {
 	return file
 }
 
-func AtFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
-	functionPC, file, line, good := runtime.Caller(callDepth + 1)
-	function := runtime.FuncForPC(functionPC).Name()
-	if good {
+func atFileLineFunction(callDepth int) (string, int, uintptr, string, bool) {
+	pc, file, line, ok := runtime.Caller(callDepth + 1)
+	function := runtime.FuncForPC(pc).Name()
+	if ok {
 		file = findPathForFile(file)
 		if index := strings.LastIndex(function, ".Test"); index >= 0 {
 			function = function[index+1:]
 		}
 	} else {
-		functionPC = 0
+		pc = 0
 		file = "?"
 		line = 1
 	}
-	return file, line, functionPC, function, good
+	return file, line, pc, function, ok
 }
 
 // Conversion
