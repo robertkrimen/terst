@@ -134,3 +134,27 @@ func TestUnknownDepth(t *testing.T) {
 		}()
 	}()
 }
+
+func testDepth1() {
+	Is(0, 1)
+}
+
+func testDepth0() {
+	Terst().Pin()
+	defer Terst().Unpin()
+
+	if true {
+		testDepth1()
+		return
+	}
+
+	Is(0, 1)
+}
+
+func TestDepth(t *testing.T) {
+	Terst(t)
+
+	if false {
+		testDepth0()
+	}
+}

@@ -15,6 +15,14 @@ import (
 	"unsafe"
 )
 
+func dbg(arguments... interface{}) {
+	output := []string{}
+	for _, argument := range arguments {
+		output = append(output, fmt.Sprintf("%v", argument))
+	}
+	fmt.Println(strings.Join(output, " "))
+}
+
 func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 	if self.SelfTesting {
 		expect := true
@@ -38,32 +46,24 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 // Pass
 
 func Pass(have bool, arguments ...interface{}) bool {
-	return OurTester().AtPass(1, have, arguments...)
+	return OurTester().Pass(have, arguments...)
 }
 
 func (self *Tester) Pass(have bool, arguments ...interface{}) bool {
-	return self.AtPass(1, have, arguments...)
-}
-
-func (self *Tester) AtPass(callDepth int, have bool, arguments ...interface{}) bool {
-	return self.atPassOrFail(true, self.AtCallDepth(callDepth), have, arguments...)
+	return self.passOrFail(true, have, arguments...)
 }
 
 // Fail
 
 func Fail(have bool, arguments ...interface{}) bool {
-	return OurTester().AtFail(1, have, arguments...)
+	return OurTester().Fail(have, arguments...)
 }
 
 func (self *Tester) Fail(have bool, arguments ...interface{}) bool {
-	return self.AtFail(1, have, arguments...)
+	return self.passOrFail(false, have, arguments...)
 }
 
-func (self *Tester) AtFail(callDepth int, have bool, arguments ...interface{}) bool {
-	return self.atPassOrFail(false, self.AtCallDepth(callDepth), have, arguments...)
-}
-
-func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments ...interface{}) bool {
+func (self *Tester) passOrFail(want bool, have bool, arguments ...interface{}) bool {
 	kind := "Pass"
 	if want == false {
 		kind = "Fail"
@@ -699,21 +699,23 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 
 type Tester struct {
 	TestingT       *testing.T
-	TestEntry      uintptr
 	SanityChecking bool
 	SelfTesting    bool
 	FailIsPassing  bool
+
+	testEntry uintptr
+	pinEntry uintptr
 }
 
 var ourTester *Tester = nil
 
-func testFunctionEntry() uintptr {
+func findTestEntry() uintptr {
 	height := 2
 	for {
-		functionPC, _, _, good := runtime.Caller(height)
+		functionPC, _, _, ok := runtime.Caller(height)
 		function := runtime.FuncForPC(functionPC)
 		functionName := function.Name()
-		if !good {
+		if !ok {
 			return 0
 		}
 		if index := strings.LastIndex(functionName, ".Test"); index >= 0 {
@@ -725,6 +727,18 @@ func testFunctionEntry() uintptr {
 	return 0
 }
 
+func (self *Tester) Pin() {
+	pc, _, _, ok := runtime.Caller(1)
+	if ok {
+		function := runtime.FuncForPC(pc)
+		self.pinEntry = function.Entry()
+	}
+}
+
+func (self *Tester) Unpin() {
+	self.pinEntry = self.testEntry
+}
+
 func Terst(arguments ...interface{}) *Tester {
 	if len(arguments) == 0 {
 		if ourTester == nil {
@@ -734,7 +748,8 @@ func Terst(arguments ...interface{}) *Tester {
 	} else {
 		ourTester = NewTester(arguments[0].(*testing.T))
 		ourTester.EnableSanityChecking()
-		ourTester.TestEntry = testFunctionEntry()
+		ourTester.testEntry = findTestEntry()
+		ourTester.pinEntry = ourTester.testEntry
 	}
 	return ourTester
 }
@@ -757,7 +772,9 @@ func HaveTester() bool {
 // Tester
 
 func NewTester(t *testing.T) *Tester {
-	return &Tester{t, 0, false, false, false}
+	return &Tester{
+		TestingT: t,
+	}
 }
 
 func (self *Tester) FormatMessage(format string, arguments ...interface{}) string {
@@ -809,10 +826,10 @@ func (self *Tester) PassIsPass() *Tester {
 }
 
 func (self *Tester) CheckSanity() *Tester {
-	if self.SanityChecking && self.TestEntry != 0 {
-		foundEntry := testFunctionEntry()
-		if self.TestEntry != foundEntry {
-			panic(fmt.Errorf("TestEntry(%v) does not match foundEntry(%v): Did you call Terst when entering a new Test* function?", self.TestEntry, foundEntry))
+	if self.SanityChecking && self.testEntry != 0 {
+		foundEntryPoint := findTestEntry()
+		if self.testEntry != foundEntryPoint {
+			panic(fmt.Errorf("TestEntry(%v) does not match foundEntry(%v): Did you call Terst when entering a new Test* function?", self.testEntry, foundEntryPoint))
 		}
 	}
 	return self
@@ -845,7 +862,7 @@ func (self *Tester) FindDepth() int {
 			}
 			return 1
 		}
-		if function.Entry() == self.TestEntry {
+		if function.Entry() == self.pinEntry {
 			return height - 1 // Not the surrounding test function, but within it
 		}
 		height += 1
