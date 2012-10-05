@@ -1,3 +1,5 @@
+/* 
+*/
 package terst
 
 import (
@@ -720,7 +722,10 @@ func testFunctionEntry() uintptr {
 
 func Terst(arguments ...interface{}) *Tester {
 	if len(arguments) == 0 {
-		ourTester = nil
+		if ourTester == nil {
+			panic("ourTester == nil")
+		}
+		return ourTester
 	} else {
 		ourTester = NewTester(arguments[0].(*testing.T))
 		ourTester.EnableSanityChecking()
