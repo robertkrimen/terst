@@ -128,7 +128,7 @@ func TestUnknownDepth(t *testing.T) {
 		func(){
 			func(){
 				func(){
-					terst.Is(terst.FindDepth(), 4)
+					terst.Is(terst.findDepth(), 4)
 				}()
 			}()
 		}()

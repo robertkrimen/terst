@@ -815,7 +815,7 @@ func (self *Tester) CheckSanity() *Tester {
 	return self
 }
 
-func (self *Tester) FindDepth() int {
+func (self *Tester) findDepth() int {
 	height := 1 // Skip us
 	for {
 		pc, _, _, ok := runtime.Caller(height)
@@ -871,7 +871,7 @@ func newTest(kind string, have, want interface{}, arguments []interface{}) *test
 }
 
 func (self *test) findFileLineFunction(tester *Tester) {
-	self.file, self.line, self.functionPC, self.function, _ = atFileLineFunction(tester.FindDepth())
+	self.file, self.line, self.functionPC, self.function, _ = atFileLineFunction(tester.findDepth())
 }
 
 func (self *test) Description() string {
