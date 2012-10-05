@@ -46,7 +46,7 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 // Pass
 
 func Pass(have bool, arguments ...interface{}) bool {
-	return OurTester().Pass(have, arguments...)
+	return terstTester().Pass(have, arguments...)
 }
 
 func (self *Tester) Pass(have bool, arguments ...interface{}) bool {
@@ -56,7 +56,7 @@ func (self *Tester) Pass(have bool, arguments ...interface{}) bool {
 // Fail
 
 func Fail(have bool, arguments ...interface{}) bool {
-	return OurTester().Fail(have, arguments...)
+	return terstTester().Fail(have, arguments...)
 }
 
 func (self *Tester) Fail(have bool, arguments ...interface{}) bool {
@@ -78,7 +78,7 @@ func (self *Tester) passOrFail(want bool, have bool, arguments ...interface{}) b
 // Equal
 
 func Equal(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().Equal(have, want, arguments...)
+	return terstTester().Equal(have, want, arguments...)
 }
 
 func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool {
@@ -96,7 +96,7 @@ func (self *Tester) equal(have, want interface{}, arguments ...interface{}) bool
 // Unequal
 
 func Unequal(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().Unequal(have, want, arguments...)
+	return terstTester().Unequal(have, want, arguments...)
 }
 
 func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bool {
@@ -114,7 +114,7 @@ func (self *Tester) unequal(have, want interface{}, arguments ...interface{}) bo
 // Is
 
 func Is(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().Is(have, want, arguments...)
+	return terstTester().Is(have, want, arguments...)
 }
 
 func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
@@ -124,7 +124,7 @@ func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
 // IsNot
 
 func IsNot(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().IsNot(have, want, arguments...)
+	return terstTester().IsNot(have, want, arguments...)
 }
 
 func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool {
@@ -154,7 +154,7 @@ func (self *Tester) isOrIsNot(wantIs bool, have, want interface{}, arguments ...
 // Like
 
 func Like(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().Like(have, want, arguments...)
+	return terstTester().Like(have, want, arguments...)
 }
 
 func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool {
@@ -164,7 +164,7 @@ func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool 
 // Unlike
 
 func Unlike(have, want interface{}, arguments ...interface{}) bool {
-	return OurTester().Unlike(have, want, arguments...)
+	return terstTester().Unlike(have, want, arguments...)
 }
 
 func (self *Tester) Unlike(have, want interface{}, arguments ...interface{}) bool {
@@ -205,7 +205,7 @@ func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, argument
 // Compare 
 
 func Compare(have interface{}, operator string, want interface{}, arguments ...interface{}) bool {
-	return OurTester().Compare(have, operator, want, arguments...)
+	return terstTester().Compare(have, operator, want, arguments...)
 }
 
 func (self *Tester) Compare(have interface{}, operator string, want interface{}, arguments ...interface{}) bool {
@@ -692,7 +692,7 @@ type Tester struct {
 	focusEntry uintptr
 }
 
-var terstTester *Tester = nil
+var _terstTester *Tester = nil
 
 func findTestEntry() uintptr {
 	height := 2
@@ -722,28 +722,25 @@ func (self *Tester) Focus() {
 
 func Terst(arguments ...interface{}) *Tester {
 	if len(arguments) == 0 {
-		if terstTester == nil {
-			panic("terstTester == nil")
-		}
-		return terstTester
+		return terstTester()
 	} else {
 		if arguments[0] == nil {
-			terstTester = nil
+			_terstTester = nil
 			return nil
 		}
-		terstTester = NewTester(arguments[0].(*testing.T))
-		terstTester.enableSanityChecking()
-		terstTester.testEntry = findTestEntry()
-		terstTester.focusEntry = terstTester.testEntry
+		_terstTester = NewTester(arguments[0].(*testing.T))
+		_terstTester.enableSanityChecking()
+		_terstTester.testEntry = findTestEntry()
+		_terstTester.focusEntry = _terstTester.testEntry
 	}
-	return terstTester
+	return _terstTester
 }
 
-func OurTester() *Tester {
-	if terstTester == nil {
-		panic("terstTester == nil")
+func terstTester() *Tester {
+	if _terstTester == nil {
+		panic("_terstTester == nil")
 	}
-	return terstTester.checkSanity()
+	return _terstTester.checkSanity()
 }
 
 // Tester
