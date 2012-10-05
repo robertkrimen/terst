@@ -746,10 +746,6 @@ func OurTester() *Tester {
 	return ourTester.checkSanity()
 }
 
-func HaveTester() bool {
-	return ourTester != nil
-}
-
 // Tester
 
 func NewTester(t *testing.T) *Tester {
