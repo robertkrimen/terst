@@ -150,11 +150,12 @@ func testDepth0() {
 	Is(0, 1)
 }
 
+var skipBreaking bool = true
+
 func TestDepth(t *testing.T) {
 	Terst(t)
 
-	skipThis := true
-	if skipThis {
+	if skipBreaking {
 		return
 	}
 
@@ -164,3 +165,14 @@ func TestDepth(t *testing.T) {
 		Is(0, 1)
 	}
 }
+
+func TestFail(t *testing.T) {
+	Terst(t)
+
+	if skipBreaking {
+		return
+	}
+
+	Fail("This test should fail.")
+}
+

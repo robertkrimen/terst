@@ -32,13 +32,13 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 		if expect != result {
 			self.Log(fmt.Sprintf("Expect %v but got %v (%v) (%v) (%v)\n", expect, result, test.kind, test.have, test.want))
 			onFail()
-			self.fail()
+			self._fail()
 		}
 		return result
 	}
 	if !result {
 		onFail()
-		self.fail()
+		self._fail()
 	}
 	return result
 }
@@ -64,17 +64,35 @@ func (self *Tester) IsFalse(have bool, arguments ...interface{}) bool {
 }
 
 func (self *Tester) trueOrFalse(want bool, have bool, arguments ...interface{}) bool {
-	kind := "Pass"
+	kind := "IsTrue"
 	if want == false {
-		kind = "Fail"
+		kind = "IsFalse"
 	}
 	test := newTest(kind, have, want, arguments)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
-		self.Log(self.failMessageForPass(test))
+		self.Log(self.failMessageForIsTrue(test))
 	})
 }
 
+// Fail
+
+func Fail(arguments ...interface{}) bool {
+	return terstTester().Fail(arguments...)
+}
+
+func (self *Tester) Fail(arguments ...interface{}) bool {
+	return self.fail(arguments...)
+}
+
+func (self *Tester) fail(arguments ...interface{}) bool {
+	kind := "Fail"
+	test := newTest(kind, false, false, arguments)
+	didPass := false
+	return self.hadResult(didPass, test, func() {
+		self.Log(self.failMessageForFail(test))
+	})
+}
 // Equal
 
 func Equal(have, want interface{}, arguments ...interface{}) bool {
@@ -604,7 +622,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
 
 // failMessage*
 
-func (self *Tester) failMessageForPass(test *test) string {
+func (self *Tester) failMessageForIsTrue(test *test) string {
 	test.findFileLineFunction(self)
 	return formatMessage(`
         %s:%d: %s 
@@ -612,6 +630,14 @@ func (self *Tester) failMessageForPass(test *test) string {
                   got: %s
              expected: %s
     `, test.file, test.line, test.Description(), test.kind, stringValue(test.have), stringValue(test.want))
+}
+
+func (self *Tester) failMessageForFail(test *test) string {
+	test.findFileLineFunction(self)
+	return formatMessage(`
+        %s:%d: %s 
+           Failed test (%s)
+    `, test.file, test.line, test.Description(), test.kind)
 }
 
 func typeKindString(value interface{}) string {
@@ -765,7 +791,7 @@ func (self *Tester) Log(moreOutput string) {
 	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output
 }
 
-func (self *Tester) fail() {
+func (self *Tester) _fail() {
 	self.TestingT.Fail()
 }
 
