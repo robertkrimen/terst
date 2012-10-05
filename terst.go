@@ -68,7 +68,7 @@ func (self *Tester) atPassOrFail(want bool, callDepth int, have bool, arguments 
 	if want == false {
 		kind = "Fail"
 	}
-	test := newTest(kind, self.AtCallDepth(callDepth), have, want, arguments)
+	test := newTest(kind, have, want, arguments)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForPass(test))
@@ -86,7 +86,7 @@ func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool
 }
 
 func (self *Tester) AtEqual(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("==", self.AtCallDepth(callDepth), have, want, arguments)
+	test := newTest("==", have, want, arguments)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForEqual(test))
@@ -104,7 +104,7 @@ func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bo
 }
 
 func (self *Tester) AtUnequal(callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("!=", self.AtCallDepth(callDepth), have, want, arguments)
+	test := newTest("!=", have, want, arguments)
 	didPass := have != want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
@@ -140,7 +140,7 @@ func (self *Tester) AtIsNot(callDepth int, have, want interface{}, arguments ...
 }
 
 func (self *Tester) atIsOrIsNot(wantIs bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Is", self.AtCallDepth(callDepth), have, want, arguments)
+	test := newTest("Is", have, want, arguments)
 	if !wantIs {
 		test.kind = "IsNot"
 	}
@@ -188,7 +188,7 @@ func (self *Tester) AtUnlike(callDepth int, have, want interface{}, arguments ..
 }
 
 func (self *Tester) atLikeOrUnlike(wantLike bool, callDepth int, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Like", self.AtCallDepth(callDepth), have, want, arguments)
+	test := newTest("Like", have, want, arguments)
 	if !wantLike {
 		test.kind = "Unlike"
 	}
@@ -230,7 +230,7 @@ func (self *Tester) Compare(have interface{}, operator string, want interface{},
 
 func (self *Tester) AtCompare(callDepth int, left interface{}, operatorString string, right interface{}, arguments ...interface{}) bool {
 	operatorString = strings.TrimSpace(operatorString)
-	test := newTest("Compare "+operatorString, self.AtCallDepth(callDepth), left, right, arguments)
+	test := newTest("Compare "+operatorString, left, right, arguments)
 	didPass, operator := compare(left, operatorString, right)
 	test.operator = operator
 	return self.hadResult(didPass, test, func() {
@@ -621,6 +621,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
 // failMessage*
 
 func (self *Tester) failMessageForPass(test *test) string {
+	test.findFileLineFunction(self)
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
@@ -643,6 +644,7 @@ func typeKindString(value interface{}) string {
 }
 
 func (self *Tester) failMessageForCompare(test *test) string {
+	test.findFileLineFunction(self)
 	return self.FormatMessage(`
         %s:%d: %s 
            Failed test (%s)
@@ -657,6 +659,7 @@ func (self *Tester) failMessageForEqual(test *test) string {
 }
 
 func (self *Tester) failMessageForIs(test *test) string {
+	test.findFileLineFunction(self)
 	return self.FormatMessage(`
         %s:%d: %v
            Failed test (%s)
@@ -666,6 +669,7 @@ func (self *Tester) failMessageForIs(test *test) string {
 }
 
 func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch bool) string {
+	test.findFileLineFunction(self)
 	expect := "  like"
 	if !wantMatch {
 		expect = "unlike"
@@ -679,6 +683,7 @@ func (self *Tester) failMessageForMatch(test *test, have, want string, wantMatch
 }
 
 func (self *Tester) failMessageForLike(test *test, have, want string, wantLike bool) string {
+	test.findFileLineFunction(self)
 	if !wantLike {
 		want = "Anything else"
 	}
@@ -863,10 +868,19 @@ type test struct {
 	function   string
 }
 
-func newTest(kind string, callDepth int, have, want interface{}, arguments []interface{}) *test {
-	file, line, functionPC, function, _ := AtFileLineFunction(callDepth + 1)
+func newTest(kind string, have, want interface{}, arguments []interface{}) *test {
 	operator := newCompareOperator("")
-	return &test{kind, have, want, arguments, operator, file, line, functionPC, function}
+	return &test{
+		kind: kind,
+		have: have,
+		want: want,
+		arguments: arguments,
+		operator: operator,
+	}
+}
+
+func (self *test) findFileLineFunction(tester *Tester) {
+	self.file, self.line, self.functionPC, self.function, _ = AtFileLineFunction(tester.FindDepth())
 }
 
 func (self *test) Description() string {
