@@ -15,9 +15,9 @@ import (
 	"unsafe"
 )
 
-func dbg(arguments... interface{}) {
+func dbg(dbg... interface{}) {
 	output := []string{}
-	for _, argument := range arguments {
+	for _, argument := range dbg {
 		output = append(output, fmt.Sprintf("%v", argument))
 	}
 	fmt.Println(strings.Join(output, " "))
@@ -45,30 +45,30 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 
 // IsTrue
 
-func IsTrue(have bool, arguments ...interface{}) bool {
-	return terstTester().IsTrue(have, arguments...)
+func IsTrue(have bool, description ...interface{}) bool {
+	return terstTester().IsTrue(have, description...)
 }
 
-func (self *Tester) IsTrue(have bool, arguments ...interface{}) bool {
-	return self.trueOrFalse(true, have, arguments...)
+func (self *Tester) IsTrue(have bool, description ...interface{}) bool {
+	return self.trueOrFalse(true, have, description...)
 }
 
 // IsFalse
 
-func IsFalse(have bool, arguments ...interface{}) bool {
-	return terstTester().IsFalse(have, arguments...)
+func IsFalse(have bool, description ...interface{}) bool {
+	return terstTester().IsFalse(have, description...)
 }
 
-func (self *Tester) IsFalse(have bool, arguments ...interface{}) bool {
-	return self.trueOrFalse(false, have, arguments...)
+func (self *Tester) IsFalse(have bool, description ...interface{}) bool {
+	return self.trueOrFalse(false, have, description...)
 }
 
-func (self *Tester) trueOrFalse(want bool, have bool, arguments ...interface{}) bool {
+func (self *Tester) trueOrFalse(want bool, have bool, description ...interface{}) bool {
 	kind := "IsTrue"
 	if want == false {
 		kind = "IsFalse"
 	}
-	test := newTest(kind, have, want, arguments)
+	test := newTest(kind, have, want, description)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIsTrue(test))
@@ -77,17 +77,17 @@ func (self *Tester) trueOrFalse(want bool, have bool, arguments ...interface{}) 
 
 // Fail
 
-func Fail(arguments ...interface{}) bool {
-	return terstTester().Fail(arguments...)
+func Fail(description ...interface{}) bool {
+	return terstTester().Fail(description...)
 }
 
-func (self *Tester) Fail(arguments ...interface{}) bool {
-	return self.fail(arguments...)
+func (self *Tester) Fail(description ...interface{}) bool {
+	return self.fail(description...)
 }
 
-func (self *Tester) fail(arguments ...interface{}) bool {
+func (self *Tester) fail(description ...interface{}) bool {
 	kind := "Fail"
-	test := newTest(kind, false, false, arguments)
+	test := newTest(kind, false, false, description)
 	didPass := false
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForFail(test))
@@ -95,16 +95,16 @@ func (self *Tester) fail(arguments ...interface{}) bool {
 }
 // Equal
 
-func Equal(have, want interface{}, arguments ...interface{}) bool {
-	return terstTester().Equal(have, want, arguments...)
+func Equal(have, want interface{}, description ...interface{}) bool {
+	return terstTester().Equal(have, want, description...)
 }
 
-func (self *Tester) Equal(have, want interface{}, arguments ...interface{}) bool {
-	return self.equal(have, want, arguments...)
+func (self *Tester) Equal(have, want interface{}, description ...interface{}) bool {
+	return self.equal(have, want, description...)
 }
 
-func (self *Tester) equal(have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("==", have, want, arguments)
+func (self *Tester) equal(have, want interface{}, description ...interface{}) bool {
+	test := newTest("==", have, want, description)
 	didPass := have == want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForEqual(test))
@@ -113,16 +113,16 @@ func (self *Tester) equal(have, want interface{}, arguments ...interface{}) bool
 
 // Unequal
 
-func Unequal(have, want interface{}, arguments ...interface{}) bool {
-	return terstTester().Unequal(have, want, arguments...)
+func Unequal(have, want interface{}, description ...interface{}) bool {
+	return terstTester().Unequal(have, want, description...)
 }
 
-func (self *Tester) Unequal(have, want interface{}, arguments ...interface{}) bool {
-	return self.unequal(have, want, arguments...)
+func (self *Tester) Unequal(have, want interface{}, description ...interface{}) bool {
+	return self.unequal(have, want, description...)
 }
 
-func (self *Tester) unequal(have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("!=", have, want, arguments)
+func (self *Tester) unequal(have, want interface{}, description ...interface{}) bool {
+	test := newTest("!=", have, want, description)
 	didPass := have != want
 	return self.hadResult(didPass, test, func() {
 		self.Log(self.failMessageForIs(test))
@@ -131,26 +131,26 @@ func (self *Tester) unequal(have, want interface{}, arguments ...interface{}) bo
 
 // Is
 
-func Is(have, want interface{}, arguments ...interface{}) bool {
-	return terstTester().Is(have, want, arguments...)
+func Is(have, want interface{}, description ...interface{}) bool {
+	return terstTester().Is(have, want, description...)
 }
 
-func (self *Tester) Is(have, want interface{}, arguments ...interface{}) bool {
-	return self.isOrIsNot(true, have, want, arguments...)
+func (self *Tester) Is(have, want interface{}, description ...interface{}) bool {
+	return self.isOrIsNot(true, have, want, description...)
 }
 
 // IsNot
 
-func IsNot(have, want interface{}, arguments ...interface{}) bool {
-	return terstTester().IsNot(have, want, arguments...)
+func IsNot(have, want interface{}, description ...interface{}) bool {
+	return terstTester().IsNot(have, want, description...)
 }
 
-func (self *Tester) IsNot(have, want interface{}, arguments ...interface{}) bool {
-	return self.isOrIsNot(false, have, want, arguments...)
+func (self *Tester) IsNot(have, want interface{}, description ...interface{}) bool {
+	return self.isOrIsNot(false, have, want, description...)
 }
 
-func (self *Tester) isOrIsNot(wantIs bool, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Is", have, want, arguments)
+func (self *Tester) isOrIsNot(wantIs bool, have, want interface{}, description ...interface{}) bool {
+	test := newTest("Is", have, want, description)
 	if !wantIs {
 		test.kind = "IsNot"
 	}
@@ -171,26 +171,26 @@ func (self *Tester) isOrIsNot(wantIs bool, have, want interface{}, arguments ...
 
 // Like
 
-func Like(have, want interface{}, arguments ...interface{}) bool {
-	return terstTester().Like(have, want, arguments...)
+func Like(have, want interface{}, description ...interface{}) bool {
+	return terstTester().Like(have, want, description...)
 }
 
-func (self *Tester) Like(have, want interface{}, arguments ...interface{}) bool {
-	return self.likeOrUnlike(true, have, want, arguments...)
+func (self *Tester) Like(have, want interface{}, description ...interface{}) bool {
+	return self.likeOrUnlike(true, have, want, description...)
 }
 
 // Unlike
 
-func Unlike(have, want interface{}, arguments ...interface{}) bool {
-	return terstTester().Unlike(have, want, arguments...)
+func Unlike(have, want interface{}, description ...interface{}) bool {
+	return terstTester().Unlike(have, want, description...)
 }
 
-func (self *Tester) Unlike(have, want interface{}, arguments ...interface{}) bool {
-	return self.likeOrUnlike(false, have, want, arguments...)
+func (self *Tester) Unlike(have, want interface{}, description ...interface{}) bool {
+	return self.likeOrUnlike(false, have, want, description...)
 }
 
-func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, arguments ...interface{}) bool {
-	test := newTest("Like", have, want, arguments)
+func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, description ...interface{}) bool {
+	test := newTest("Like", have, want, description)
 	if !wantLike {
 		test.kind = "Unlike"
 	}
@@ -222,17 +222,17 @@ func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, argument
 
 // Compare 
 
-func Compare(have interface{}, operator string, want interface{}, arguments ...interface{}) bool {
-	return terstTester().Compare(have, operator, want, arguments...)
+func Compare(have interface{}, operator string, want interface{}, description ...interface{}) bool {
+	return terstTester().Compare(have, operator, want, description...)
 }
 
-func (self *Tester) Compare(have interface{}, operator string, want interface{}, arguments ...interface{}) bool {
-	return self.compare(have, operator, want, arguments...)
+func (self *Tester) Compare(have interface{}, operator string, want interface{}, description ...interface{}) bool {
+	return self.compare(have, operator, want, description...)
 }
 
-func (self *Tester) compare(left interface{}, operatorString string, right interface{}, arguments ...interface{}) bool {
+func (self *Tester) compare(left interface{}, operatorString string, right interface{}, description ...interface{}) bool {
 	operatorString = strings.TrimSpace(operatorString)
-	test := newTest("Compare "+operatorString, left, right, arguments)
+	test := newTest("Compare "+operatorString, left, right, description)
 	didPass, operator := compare(left, operatorString, right)
 	test.operator = operator
 	return self.hadResult(didPass, test, func() {
@@ -746,15 +746,15 @@ func (self *Tester) Focus() {
 	}
 }
 
-func Terst(arguments ...interface{}) *Tester {
-	if len(arguments) == 0 {
+func Terst(terst ...interface{}) *Tester {
+	if len(terst) == 0 {
 		return terstTester()
 	} else {
-		if arguments[0] == nil {
+		if terst[0] == nil {
 			_terstTester = nil
 			return nil
 		}
-		_terstTester = NewTester(arguments[0].(*testing.T))
+		_terstTester = NewTester(terst[0].(*testing.T))
 		_terstTester.enableSanityChecking()
 		_terstTester.testEntry = findTestEntry()
 		_terstTester.focusEntry = _terstTester.testEntry
@@ -777,18 +777,18 @@ func NewTester(t *testing.T) *Tester {
 	}
 }
 
-func formatMessage(message string, arguments ...interface{}) string {
-	message = fmt.Sprintf(message, arguments...)
+func formatMessage(message string, argumentList ...interface{}) string {
+	message = fmt.Sprintf(message, argumentList...)
 	message = strings.TrimLeft(message, "\n")
 	message = strings.TrimRight(message, " \n")
 	return message + "\n\n"
 }
 
-func (self *Tester) Log(moreOutput string) {
+func (self *Tester) Log(output string) {
 	outputValue := reflect.ValueOf(self.TestingT).Elem().FieldByName("output")
-	output := outputValue.Bytes()
-	output = append(output, moreOutput...)
-	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output
+	output_ := outputValue.Bytes()
+	output_ = append(output_, output...)
+	*(*[]byte)(unsafe.Pointer(outputValue.UnsafeAddr())) = output_
 }
 
 func (self *Tester) _fail() {
@@ -870,7 +870,7 @@ type test struct {
 	kind      string
 	have      interface{}
 	want      interface{}
-	arguments []interface{}
+	description []interface{}
 	operator  compareOperator
 
 	file       string
@@ -879,13 +879,13 @@ type test struct {
 	function   string
 }
 
-func newTest(kind string, have, want interface{}, arguments []interface{}) *test {
+func newTest(kind string, have, want interface{}, description []interface{}) *test {
 	operator := newCompareOperator("")
 	return &test{
 		kind: kind,
 		have: have,
 		want: want,
-		arguments: arguments,
+		description: description,
 		operator: operator,
 	}
 }
@@ -896,9 +896,8 @@ func (self *test) findFileLineFunction(tester *Tester) {
 
 func (self *test) Description() string {
 	description := ""
-	arguments := self.arguments
-	if len(arguments) > 0 {
-		description = fmt.Sprintf("%s", arguments[0])
+	if len(self.description) > 0 {
+		description = fmt.Sprintf("%v", self.description[0])
 	}
 	return description
 }

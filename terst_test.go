@@ -20,8 +20,10 @@ func TestDuJour(t *testing.T) {
 
 func TestIsWithoutTerst(t *testing.T) {
 	// The following will panic
-	// UnTerst()
-	// Is(1, 1)
+	if false {
+		Terst(nil)
+		Is(1, 1)
+	}
 }
 
 func TestNewCompareOperator(t *testing.T) {
