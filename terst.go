@@ -1,7 +1,7 @@
 /* 
 Package terst is a terse (terst = test + terse), easy-to-use testing library for Go.
 
-In addition, terst is compatible with (and works via) the standard testing package.
+terst is compatible with (and works via) the standard testing package: http://golang.org/pkg/testing
 
 	import (
 		"testing"
@@ -56,6 +56,21 @@ description will be included with the test output For example:
 			Failed test (Is)
 			     got: 4 (int)
 			expected: 5 (float32)
+
+AUTHOR
+
+	Robert Krimen <robertkrimen@gmail.com>
+
+FUTURE
+
+	- Add Catch() for testing panic()
+	- Add Same() for testing via .DeepEqual && == (without panicking?)
+	- Add StrictCompare to use {}= scoping
+	- Add BigCompare for easier math/big.Int testing?
+	- Support the complex type in Compare()
+	- Equality test for NaN?
+	- Better syntax for At*
+	- Need IsType/TypeIs
 
 */
 package terst
@@ -911,6 +926,17 @@ func (self *Tester) Focus() {
 	}
 }
 
+//		Terst(*testing.T)
+//
+// Create a new terst Tester and return it.  Associate calls to Is, Compare, Like, etc. with the newly created terst.
+//
+//		Terst()
+//
+// Return the current Tester (if any).
+//
+//		Terst(nil)
+//
+// Clear out the current Tester (if any).
 func Terst(terst ...interface{}) *Tester {
 	if len(terst) == 0 {
 		return terstTester()
@@ -919,7 +945,7 @@ func Terst(terst ...interface{}) *Tester {
 			_terstTester = nil
 			return nil
 		}
-		_terstTester = NewTester(terst[0].(*testing.T))
+		_terstTester = newTester(terst[0].(*testing.T))
 		_terstTester.enableSanityChecking()
 		_terstTester.testEntry = findTestEntry()
 		_terstTester.focusEntry = _terstTester.testEntry
@@ -934,9 +960,7 @@ func terstTester() *Tester {
 	return _terstTester.checkSanity()
 }
 
-// Tester
-
-func NewTester(t *testing.T) *Tester {
+func newTester(t *testing.T) *Tester {
 	return &Tester{
 		TestingT: t,
 	}
