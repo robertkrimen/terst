@@ -139,8 +139,14 @@ func (self *Tester) fail(description ...interface{}) bool {
 		self.Log(self.failMessageForFail(test))
 	})
 }
-// Equal
 
+// Equal tests have against want via ==:
+//
+//		Equal(have, want) // Pass if have == want
+//
+// No special coercion or type inspection is done.
+//
+// If the type is incomparable (e.g. type mismatch) this will panic.
 func Equal(have, want interface{}, description ...interface{}) bool {
 	return terstTester().Equal(have, want, description...)
 }
@@ -157,8 +163,13 @@ func (self *Tester) equal(have, want interface{}, description ...interface{}) bo
 	})
 }
 
-// Unequal
-
+// Unequal tests have against want via !=:
+//
+//		Unequal(have, want) // Pass if have != want
+//
+// No special coercion or type inspection is done.
+//
+// If the type is incomparable (e.g. type mismatch) this will panic.
 func Unequal(have, want interface{}, description ...interface{}) bool {
 	return terstTester().Unequal(have, want, description...)
 }
@@ -175,21 +186,45 @@ func (self *Tester) unequal(have, want interface{}, description ...interface{}) 
 	})
 }
 
-// Is
-
+// Is tests <have> against <want> in two different ways, depending on if
+// <want> is a string or not.
+//
+// If <want> is of type string, then it will first convert
+// <have> to a string before doing the comparison:
+//
+//		Is(fmt.Sprintf("%v", have), want) // Pass if have == want
+//
+// Otherwise, Is is a shortcut for:
+//
+//		Compare(have, "==", want)
+//
+// If <want> is a slice, struct, or similar, Is will perform a reflect.DeepEqual() comparison.
 func Is(have, want interface{}, description ...interface{}) bool {
 	return terstTester().Is(have, want, description...)
 }
+// TODO "slice, struct, or similar" What is similar?
 
 func (self *Tester) Is(have, want interface{}, description ...interface{}) bool {
 	return self.isOrIsNot(true, have, want, description...)
 }
 
-// IsNot
-
+// IsNot tests <have> against <want> in two different ways, depending on if
+// <want> is a string or not.
+//
+// If <want> is of type string, then it will first convert
+// <have> to a string before doing the comparison:
+//
+//		IsNot(fmt.Sprintf("%v", have), want) // Pass if have != want
+//
+// Otherwise, Is is a shortcut for:
+//
+//		Compare(have, "!=", want)
+//
+// If <want> is a slice, struct, or similar, Is will perform a reflect.DeepEqual() comparison.
 func IsNot(have, want interface{}, description ...interface{}) bool {
 	return terstTester().IsNot(have, want, description...)
 }
+// TODO "slice, struct, or similar" What is similar?
 
 func (self *Tester) IsNot(have, want interface{}, description ...interface{}) bool {
 	return self.isOrIsNot(false, have, want, description...)
