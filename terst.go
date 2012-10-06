@@ -973,6 +973,7 @@ func formatMessage(message string, argumentList ...interface{}) string {
 	return message + "\n\n"
 }
 
+// Log is a utility method that will append the given output to the normal output stream.
 func (self *Tester) Log(output string) {
 	outputValue := reflect.ValueOf(self.TestingT).Elem().FieldByName("output")
 	output_ := outputValue.Bytes()

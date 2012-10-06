@@ -1,7 +1,10 @@
-.PHONY: test synopsis
+.PHONY: test synopsis README
 
 test:
 	go test .
 
 synopsis:
-	cd synopsis && go test
+	cd .hide && go test
+
+README:
+	godoc . > README
