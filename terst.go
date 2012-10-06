@@ -5,7 +5,7 @@ In addition, terst is compatible with (and works via) the standard testing packa
 
 	import (
 		"testing"
-		. "terst"
+		. "github.com/robertkrimen/terst"
 	)
 
 	func Test(t *testing.T) {
@@ -44,6 +44,18 @@ After you initialize with the given *testing.T, you can use the following to tes
 	Like
 	Unlike
 	Compare
+
+Each of the methods above can take an additional (optional) argument,
+which is a string describing the test. If the test fails, this
+description will be included with the test output For example:
+
+	Is(2 + 2, float32(5), "This result is Doubleplusgood")
+
+	--- FAIL: Test (0.00 seconds)
+		test.go:17: This result is Doubleplusgood
+			Failed test (Is)
+			     got: 4 (int)
+			expected: 5 (float32)
 
 */
 package terst
@@ -89,22 +101,22 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 	return result
 }
 
-// IsTrue
-
+// IsTrue tests if <have> is true.
 func IsTrue(have bool, description ...interface{}) bool {
 	return terstTester().IsTrue(have, description...)
 }
 
+// IsTrue tests if <have> is true.
 func (self *Tester) IsTrue(have bool, description ...interface{}) bool {
 	return self.trueOrFalse(true, have, description...)
 }
 
-// IsFalse
-
+// IsFalse tests if <have> is false.
 func IsFalse(have bool, description ...interface{}) bool {
 	return terstTester().IsFalse(have, description...)
 }
 
+// IsFalse tests if <have> is false.
 func (self *Tester) IsFalse(have bool, description ...interface{}) bool {
 	return self.trueOrFalse(false, have, description...)
 }
@@ -121,12 +133,12 @@ func (self *Tester) trueOrFalse(want bool, have bool, description ...interface{}
 	})
 }
 
-// Fail
-
+// Fail will fail immediately, reporting a test failure with the (optional) description
 func Fail(description ...interface{}) bool {
 	return terstTester().Fail(description...)
 }
 
+// Fail will fail immediately, reporting a test failure with the (optional) description
 func (self *Tester) Fail(description ...interface{}) bool {
 	return self.fail(description...)
 }
@@ -186,10 +198,10 @@ func (self *Tester) unequal(have, want interface{}, description ...interface{}) 
 	})
 }
 
-// Is tests <have> against <want> in two different ways, depending on if
-// <want> is a string or not.
+// Is tests <have> against <want> in different ways, depending on the
+// type of <want>.
 //
-// If <want> is of type string, then it will first convert
+// If <want> is a string, then it will first convert
 // <have> to a string before doing the comparison:
 //
 //		Is(fmt.Sprintf("%v", have), want) // Pass if have == want
@@ -208,10 +220,10 @@ func (self *Tester) Is(have, want interface{}, description ...interface{}) bool 
 	return self.isOrIsNot(true, have, want, description...)
 }
 
-// IsNot tests <have> against <want> in two different ways, depending on if
-// <want> is a string or not.
+// IsNot tests <have> against <want> in different ways, depending on the
+// type of <want>.
 //
-// If <want> is of type string, then it will first convert
+// If <want> is a string, then it will first convert
 // <have> to a string before doing the comparison:
 //
 //		IsNot(fmt.Sprintf("%v", have), want) // Pass if have != want
@@ -250,8 +262,19 @@ func (self *Tester) isOrIsNot(wantIs bool, have, want interface{}, description .
 	})
 }
 
-// Like
-
+// Like tests <have> against <want> in different ways, depending on the
+// type of <want>.
+//
+// If <want> is a string, then it will first convert
+// <have> to a string before doing a regular expression comparison:
+//
+//		Like(fmt.Sprintf("%v", have), want) // Pass if regexp.Match(want, have)
+//
+// Otherwise, Like is a shortcut for:
+//
+//		Compare(have, "{}~ ==", want)
+//
+// If <want> is a slice, struct, or similar, Like will perform a reflect.DeepEqual() comparison.
 func Like(have, want interface{}, description ...interface{}) bool {
 	return terstTester().Like(have, want, description...)
 }
@@ -260,8 +283,19 @@ func (self *Tester) Like(have, want interface{}, description ...interface{}) boo
 	return self.likeOrUnlike(true, have, want, description...)
 }
 
-// Unlike
-
+// Unlike tests <have> against <want> in different ways, depending on the
+// type of <want>.
+//
+// If <want> is a string, then it will first convert
+// <have> to a string before doing a regular expression comparison:
+//
+//		Unlike(fmt.Sprintf("%v", have), want) // Pass if !regexp.Match(want, have)
+//
+// Otherwise, Unlike is a shortcut for:
+//
+//		Compare(have, "{}~ !=", want)
+//
+// If <want> is a slice, struct, or similar, Unlike will perform a reflect.DeepEqual() comparison.
 func Unlike(have, want interface{}, description ...interface{}) bool {
 	return terstTester().Unlike(have, want, description...)
 }
@@ -301,8 +335,31 @@ func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, descript
 	})
 }
 
-// Compare 
-
+// Compare will compare <have> to <want> with the given operator. The operator can be one of the following:
+//
+//		  ==
+//		  !=
+//		  <
+//		  <=
+//		  >
+//		  >=
+//
+// Compare is not strict when comparing numeric types,
+// and will make a best effort to promote <have> and <want> to the
+// same type.
+//
+// Compare will promote int and uint to big.Int for testing
+// against each other.
+//
+// Compare will promote int, uint, and float to float64 for
+// float testing.
+//
+// For example:
+//	
+//		Compare(float32(1.0), "<", int8(2)) // A valid test
+//
+//		result := float32(1.0) < int8(2) // Will not compile because of the type mismatch
+//
 func Compare(have interface{}, operator string, want interface{}, description ...interface{}) bool {
 	return terstTester().Compare(have, operator, want, description...)
 }
@@ -819,6 +876,33 @@ func findTestEntry() uintptr {
 	return 0
 }
 
+// Focus will focus the entry point of the test to the current method.
+//
+// This is important for test failures in getting feedback on which line was at fault.
+//
+// Consider the following scenario:
+//
+//		func testingMethod( ... ) {
+//			Is( ..., ... )
+//		}
+//
+//		func TestExample(t *testing.T) {
+//			Terst(t)
+//
+//			testingMethod( ... )
+//			testingMethod( ... ) // If something in testingMethod fails, this line number will come up
+//			testingMethod( ... )
+//		}
+//	
+// By default, when a test fails, terst will report the outermost line that led to the failure.
+// Usually this is what you want, but if you need to drill down, you can by inserting a special
+// call at the top of your testing method:
+//
+//		func testingMethod( ... ) {
+//			Terst().Focus() // Grab the global Tester and tell it to focus on this method
+//			Is( ..., ... ) // Now if this test fails, this line number will come up
+//		}
+//
 func (self *Tester) Focus() {
 	pc, _, _, ok := runtime.Caller(1)
 	if ok {
