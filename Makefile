@@ -7,4 +7,4 @@ synopsis:
 	cd .hide && go test
 
 README:
-	godoc . | godocdown  > README.md
+	godocdown > README.md

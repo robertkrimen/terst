@@ -57,11 +57,7 @@ description will be included with the test output For example:
 			     got: 4 (int)
 			expected: 5 (float32)
 
-AUTHOR
-
-	Robert Krimen <robertkrimen@gmail.com>
-
-FUTURE
+Future
 
 	- Add Catch() for testing panic()
 	- Add Same() for testing via .DeepEqual && == (without panicking?)
