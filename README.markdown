@@ -76,30 +76,27 @@ description will be included with the test output For example:
 ```go
 func Compare(have interface{}, operator string, want interface{}, description ...interface{}) bool
 ```
-Compare will compare <have> to <want> with the given operator. The operator can be one of the following:
+Compare will compare <have> to <want> with the given operator. The operator can
+be one of the following:
 
-		  ==
-		  !=
-		  <
-		  <=
-		  >
-		  >=
+    ==
+    !=
+    <
+    <=
+    >
+    >=
 
-Compare is not strict when comparing numeric types,
-and will make a best effort to promote <have> and <want> to the
-same type.
+Compare is not strict when comparing numeric types, and will make a best effort
+to promote <have> and <want> to the same type.
 
-Compare will promote int and uint to big.Int for testing
-against each other.
+Compare will promote int and uint to big.Int for testing against each other.
 
-Compare will promote int, uint, and float to float64 for
-float testing.
+Compare will promote int, uint, and float to float64 for float testing.
 
 For example:
 
-		Compare(float32(1.0), "<", int8(2)) // A valid test
-
-		result := float32(1.0) < int8(2) // Will not compile because of the type mismatch
+    Compare(float32(1.0), "<", int8(2)) // A valid test
+    result := float32(1.0) < int8(2) // Will not compile because of the type mismatch
 
 #### func  Equal
 
@@ -108,7 +105,7 @@ func Equal(have, want interface{}, description ...interface{}) bool
 ```
 Equal tests have against want via ==:
 
-		Equal(have, want) // Pass if have == want
+    Equal(have, want) // Pass if have == want
 
 No special coercion or type inspection is done.
 
@@ -119,26 +116,28 @@ If the type is incomparable (e.g. type mismatch) this will panic.
 ```go
 func Fail(description ...interface{}) bool
 ```
-Fail will fail immediately, reporting a test failure with the (optional) description
+Fail will fail immediately, reporting a test failure with the (optional)
+description
 
 #### func  Is
 
 ```go
 func Is(have, want interface{}, description ...interface{}) bool
 ```
-Is tests <have> against <want> in different ways, depending on the
-type of <want>.
+Is tests <have> against <want> in different ways, depending on the type of
+<want>.
 
-If <want> is a string, then it will first convert
-<have> to a string before doing the comparison:
+If <want> is a string, then it will first convert <have> to a string before
+doing the comparison:
 
-		Is(fmt.Sprintf("%v", have), want) // Pass if have == want
+    Is(fmt.Sprintf("%v", have), want) // Pass if have == want
 
 Otherwise, Is is a shortcut for:
 
-		Compare(have, "==", want)
+    Compare(have, "==", want)
 
-If <want> is a slice, struct, or similar, Is will perform a reflect.DeepEqual() comparison.
+If <want> is a slice, struct, or similar, Is will perform a reflect.DeepEqual()
+comparison.
 
 #### func  IsFalse
 
@@ -152,19 +151,20 @@ IsFalse tests if <have> is false.
 ```go
 func IsNot(have, want interface{}, description ...interface{}) bool
 ```
-IsNot tests <have> against <want> in different ways, depending on the
-type of <want>.
+IsNot tests <have> against <want> in different ways, depending on the type of
+<want>.
 
-If <want> is a string, then it will first convert
-<have> to a string before doing the comparison:
+If <want> is a string, then it will first convert <have> to a string before
+doing the comparison:
 
-		IsNot(fmt.Sprintf("%v", have), want) // Pass if have != want
+    IsNot(fmt.Sprintf("%v", have), want) // Pass if have != want
 
 Otherwise, Is is a shortcut for:
 
-		Compare(have, "!=", want)
+    Compare(have, "!=", want)
 
-If <want> is a slice, struct, or similar, Is will perform a reflect.DeepEqual() comparison.
+If <want> is a slice, struct, or similar, Is will perform a reflect.DeepEqual()
+comparison.
 
 #### func  IsTrue
 
@@ -178,19 +178,20 @@ IsTrue tests if <have> is true.
 ```go
 func Like(have, want interface{}, description ...interface{}) bool
 ```
-Like tests <have> against <want> in different ways, depending on the
-type of <want>.
+Like tests <have> against <want> in different ways, depending on the type of
+<want>.
 
-If <want> is a string, then it will first convert
-<have> to a string before doing a regular expression comparison:
+If <want> is a string, then it will first convert <have> to a string before
+doing a regular expression comparison:
 
-		Like(fmt.Sprintf("%v", have), want) // Pass if regexp.Match(want, have)
+    Like(fmt.Sprintf("%v", have), want) // Pass if regexp.Match(want, have)
 
 Otherwise, Like is a shortcut for:
 
-		Compare(have, "{}~ ==", want)
+    Compare(have, "{}~ ==", want)
 
-If <want> is a slice, struct, or similar, Like will perform a reflect.DeepEqual() comparison.
+If <want> is a slice, struct, or similar, Like will perform a
+reflect.DeepEqual() comparison.
 
 #### func  Unequal
 
@@ -199,7 +200,7 @@ func Unequal(have, want interface{}, description ...interface{}) bool
 ```
 Unequal tests have against want via !=:
 
-		Unequal(have, want) // Pass if have != want
+    Unequal(have, want) // Pass if have != want
 
 No special coercion or type inspection is done.
 
@@ -210,19 +211,20 @@ If the type is incomparable (e.g. type mismatch) this will panic.
 ```go
 func Unlike(have, want interface{}, description ...interface{}) bool
 ```
-Unlike tests <have> against <want> in different ways, depending on the
-type of <want>.
+Unlike tests <have> against <want> in different ways, depending on the type of
+<want>.
 
-If <want> is a string, then it will first convert
-<have> to a string before doing a regular expression comparison:
+If <want> is a string, then it will first convert <have> to a string before
+doing a regular expression comparison:
 
-		Unlike(fmt.Sprintf("%v", have), want) // Pass if !regexp.Match(want, have)
+    Unlike(fmt.Sprintf("%v", have), want) // Pass if !regexp.Match(want, have)
 
 Otherwise, Unlike is a shortcut for:
 
-		Compare(have, "{}~ !=", want)
+    Compare(have, "{}~ !=", want)
 
-If <want> is a slice, struct, or similar, Unlike will perform a reflect.DeepEqual() comparison.
+If <want> is a slice, struct, or similar, Unlike will perform a
+reflect.DeepEqual() comparison.
 
 #### type Tester
 
@@ -239,15 +241,16 @@ type Tester struct {
 ```go
 func Terst(terst ...interface{}) *Tester
 ```
-		Terst(*testing.T)
 
-Create a new terst Tester and return it.  Associate calls to Is, Compare, Like, etc. with the newly created terst.
+    Terst(*testing.T)
+Create a new terst Tester and return it. Associate calls to Is, Compare, Like,
+etc. with the newly created terst.
 
-		Terst()
+    Terst()
 
 Return the current Tester (if any).
 
-		Terst(nil)
+    Terst(nil)
 
 Clear out the current Tester (if any).
 
@@ -268,7 +271,8 @@ func (self *Tester) Equal(have, want interface{}, description ...interface{}) bo
 ```go
 func (self *Tester) Fail(description ...interface{}) bool
 ```
-Fail will fail immediately, reporting a test failure with the (optional) description
+Fail will fail immediately, reporting a test failure with the (optional)
+description
 
 #### func (*Tester) Focus
 
@@ -277,30 +281,29 @@ func (self *Tester) Focus()
 ```
 Focus will focus the entry point of the test to the current method.
 
-This is important for test failures in getting feedback on which line was at fault.
+This is important for test failures in getting feedback on which line was at
+fault.
 
 Consider the following scenario:
 
-		func testingMethod( ... ) {
-			Is( ..., ... )
-		}
+    func testingMethod( ... ) {
+    	Is( ..., ... )
+    }
+    func TestExample(t *testing.T) {
+    	Terst(t)
+    	testingMethod( ... )
+    	testingMethod( ... ) // If something in testingMethod fails, this line number will come up
+    	testingMethod( ... )
+    }
 
-		func TestExample(t *testing.T) {
-			Terst(t)
+By default, when a test fails, terst will report the outermost line that led to
+the failure. Usually this is what you want, but if you need to drill down, you
+can by inserting a special call at the top of your testing method:
 
-			testingMethod( ... )
-			testingMethod( ... ) // If something in testingMethod fails, this line number will come up
-			testingMethod( ... )
-		}
-
-By default, when a test fails, terst will report the outermost line that led to the failure.
-Usually this is what you want, but if you need to drill down, you can by inserting a special
-call at the top of your testing method:
-
-		func testingMethod( ... ) {
-			Terst().Focus() // Grab the global Tester and tell it to focus on this method
-			Is( ..., ... ) // Now if this test fails, this line number will come up
-		}
+    func testingMethod( ... ) {
+    	Terst().Focus() // Grab the global Tester and tell it to focus on this method
+    	Is( ..., ... ) // Now if this test fails, this line number will come up
+    }
 
 #### func (*Tester) Is
 
@@ -339,7 +342,8 @@ func (self *Tester) Like(have, want interface{}, description ...interface{}) boo
 ```go
 func (self *Tester) Log(output string)
 ```
-Log is a utility method that will append the given output to the normal output stream.
+Log is a utility method that will append the given output to the normal output
+stream.
 
 #### func (*Tester) Unequal
 

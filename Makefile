@@ -1,4 +1,4 @@
-.PHONY: test synopsis README
+.PHONY: test synopsis release
 
 test:
 	go test .
@@ -6,5 +6,5 @@ test:
 synopsis:
 	cd .hide && go test
 
-README:
-	godocdown > README.md
+release:
+	godocdown > README.markdown
