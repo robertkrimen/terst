@@ -6,5 +6,5 @@ test:
 synopsis:
 	cd .hide && go test
 
-release:
-	godocdown > README.markdown
+release: test
+	godocdown --signature > README.markdown

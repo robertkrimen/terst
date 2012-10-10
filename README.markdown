@@ -231,7 +231,6 @@ reflect.DeepEqual() comparison.
 ```go
 type Tester struct {
 	TestingT *testing.T
-	// contains filtered or unexported fields
 }
 ```
 
@@ -357,4 +356,5 @@ func (self *Tester) Unequal(have, want interface{}, description ...interface{}) 
 func (self *Tester) Unlike(have, want interface{}, description ...interface{}) bool
 ```
 
-
+--
+**godocdown** http://github.com/robertkrimen/godocdown
