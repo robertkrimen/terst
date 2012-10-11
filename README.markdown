@@ -1,5 +1,7 @@
 # terst
 --
+    import "github.com/robertkrimen/terst"
+
 Package terst is a terse (terst = test + terse), easy-to-use testing library for Go.
 
 terst is compatible with (and works via) the standard testing package: http://golang.org/pkg/testing
