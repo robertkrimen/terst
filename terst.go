@@ -84,14 +84,6 @@ import (
 	"unsafe"
 )
 
-func dbg(dbg ...interface{}) {
-	output := []string{}
-	for _, argument := range dbg {
-		output = append(output, fmt.Sprintf("%v", argument))
-	}
-	fmt.Println(strings.Join(output, " "))
-}
-
 func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 	if self.selfTesting {
 		expect := true
