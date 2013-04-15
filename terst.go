@@ -72,9 +72,9 @@ Future
 package terst
 
 import (
-	"os"
 	"fmt"
 	"math/big"
+	"os"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -84,7 +84,7 @@ import (
 	"unsafe"
 )
 
-func dbg(dbg... interface{}) {
+func dbg(dbg ...interface{}) {
 	output := []string{}
 	for _, argument := range dbg {
 		output = append(output, fmt.Sprintf("%v", argument))
@@ -112,22 +112,34 @@ func (self *Tester) hadResult(result bool, test *test, onFail func()) bool {
 	return result
 }
 
-// IsTrue tests if <have> is true.
+// IsTrue is DEPRECATED by:
+//
+//      Is(..., true)
+//
 func IsTrue(have bool, description ...interface{}) bool {
 	return terstTester().IsTrue(have, description...)
 }
 
-// IsTrue tests if <have> is true.
+// IsTrue is DEPRECATED by:
+//
+//      Is(..., true)
+//
 func (self *Tester) IsTrue(have bool, description ...interface{}) bool {
 	return self.trueOrFalse(true, have, description...)
 }
 
-// IsFalse tests if <have> is false.
+// IsFalse is DEPRECATED by:
+//
+//      Is(..., false)
+//
 func IsFalse(have bool, description ...interface{}) bool {
 	return terstTester().IsFalse(have, description...)
 }
 
-// IsFalse tests if <have> is false.
+// IsFalse is DEPRECATED by:
+//
+//      Is(..., false)
+//
 func (self *Tester) IsFalse(have bool, description ...interface{}) bool {
 	return self.trueOrFalse(false, have, description...)
 }
@@ -225,6 +237,7 @@ func (self *Tester) unequal(have, want interface{}, description ...interface{}) 
 func Is(have, want interface{}, description ...interface{}) bool {
 	return terstTester().Is(have, want, description...)
 }
+
 // TODO "slice, struct, or similar" What is similar?
 
 func (self *Tester) Is(have, want interface{}, description ...interface{}) bool {
@@ -247,6 +260,7 @@ func (self *Tester) Is(have, want interface{}, description ...interface{}) bool 
 func IsNot(have, want interface{}, description ...interface{}) bool {
 	return terstTester().IsNot(have, want, description...)
 }
+
 // TODO "slice, struct, or similar" What is similar?
 
 func (self *Tester) IsNot(have, want interface{}, description ...interface{}) bool {
@@ -857,13 +871,13 @@ func (self *Tester) failMessageForLike(test *test, have, want string, wantLike b
 // ...
 
 type Tester struct {
-	TestingT       *testing.T
+	TestingT *testing.T
 
 	sanityChecking bool
 	selfTesting    bool
 	failIsPassing  bool
 
-	testEntry uintptr
+	testEntry  uintptr
 	focusEntry uintptr
 }
 
@@ -1053,11 +1067,11 @@ func (self *Tester) findDepth() int {
 // test
 
 type test struct {
-	kind      string
-	have      interface{}
-	want      interface{}
+	kind        string
+	have        interface{}
+	want        interface{}
 	description []interface{}
-	operator  compareOperator
+	operator    compareOperator
 
 	file       string
 	line       int
@@ -1068,11 +1082,11 @@ type test struct {
 func newTest(kind string, have, want interface{}, description []interface{}) *test {
 	operator := newCompareOperator("")
 	return &test{
-		kind: kind,
-		have: have,
-		want: want,
+		kind:        kind,
+		have:        have,
+		want:        want,
 		description: description,
-		operator: operator,
+		operator:    operator,
 	}
 }
 
