@@ -166,6 +166,29 @@ func (self *Tester) fail(description ...interface{}) bool {
 	})
 }
 
+// FailNow will fail immediately, triggering testing.FailNow() and optionally reporting a test failure with description
+func FailNow(description ...interface{}) bool {
+	return terstTester().FailNow(description...)
+}
+
+// FailNow will fail immediately, triggering testing.FailNow() and optionally reporting a test failure with description
+func (self *Tester) FailNow(description ...interface{}) bool {
+	return self.failNow(description...)
+}
+
+func (self *Tester) failNow(description ...interface{}) bool {
+	if len(description) > 0 {
+		kind := "FailNow"
+		test := newTest(kind, false, false, description)
+		didPass := false
+		self.hadResult(didPass, test, func() {
+			self.Log(self.failMessageForFail(test))
+		})
+	}
+	self.TestingT.FailNow()
+	return false
+}
+
 // Equal tests have against want via ==:
 //
 //		Equal(have, want) // Pass if have == want
