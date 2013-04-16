@@ -121,6 +121,14 @@ func Fail(description ...interface{}) bool
 Fail will fail immediately, reporting a test failure with the (optional)
 description
 
+#### func  FailNow
+
+```go
+func FailNow(description ...interface{}) bool
+```
+FailNow will fail immediately, triggering testing.FailNow() and optionally
+reporting a test failure with description
+
 #### func  Is
 
 ```go
@@ -146,7 +154,9 @@ comparison.
 ```go
 func IsFalse(have bool, description ...interface{}) bool
 ```
-IsFalse tests if <have> is false.
+IsFalse is DEPRECATED by:
+
+    Is(..., false)
 
 #### func  IsNot
 
@@ -173,7 +183,9 @@ comparison.
 ```go
 func IsTrue(have bool, description ...interface{}) bool
 ```
-IsTrue tests if <have> is true.
+IsTrue is DEPRECATED by:
+
+    Is(..., true)
 
 #### func  Like
 
@@ -275,6 +287,14 @@ func (self *Tester) Fail(description ...interface{}) bool
 Fail will fail immediately, reporting a test failure with the (optional)
 description
 
+#### func (*Tester) FailNow
+
+```go
+func (self *Tester) FailNow(description ...interface{}) bool
+```
+FailNow will fail immediately, triggering testing.FailNow() and optionally
+reporting a test failure with description
+
 #### func (*Tester) Focus
 
 ```go
@@ -317,7 +337,9 @@ func (self *Tester) Is(have, want interface{}, description ...interface{}) bool
 ```go
 func (self *Tester) IsFalse(have bool, description ...interface{}) bool
 ```
-IsFalse tests if <have> is false.
+IsFalse is DEPRECATED by:
+
+    Is(..., false)
 
 #### func (*Tester) IsNot
 
@@ -330,7 +352,9 @@ func (self *Tester) IsNot(have, want interface{}, description ...interface{}) bo
 ```go
 func (self *Tester) IsTrue(have bool, description ...interface{}) bool
 ```
-IsTrue tests if <have> is true.
+IsTrue is DEPRECATED by:
+
+    Is(..., true)
 
 #### func (*Tester) Like
 

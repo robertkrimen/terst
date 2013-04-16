@@ -4,11 +4,10 @@ build:
 	go build
 
 release: build
-	godocdown -signature . > README.markdown
+	$(MAKE) -C .. $@
 
 install: build
 	go install
 
 clean:
 	rm -f terst-import
-	rm -rf terst
