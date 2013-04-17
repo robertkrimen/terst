@@ -7,16 +7,16 @@ Install
 
 Usage
 
-    Usage: terst-import [target]
-     -quiet=false: Be absolutely quiet
-     -update=false: Update (go get -u) package first
-     -verbose=false: Be more verbose
-
-        # Import "github.com/robertkrimen/terst" into the current directory
-        $ terst-import
-
-        # Import "github.com/robertkrimen/terst" into another directory
-        $ terst-import ./xyzzy
+    Usage: terst-import [target]                                               
+     -quiet=false: Be absolutely quiet                                         
+     -update=false: Update (go get -u) package first                           
+     -verbose=false: Be more verbose                                           
+                                                                               
+        # Import "github.com/robertkrimen/terst" into the current directory    
+        $ terst-import                                                         
+                                                                               
+        # Import "github.com/robertkrimen/terst" into another directory        
+        $ terst-import ./xyzzy                                                 
 */
 package main
 
