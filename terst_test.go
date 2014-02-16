@@ -2,6 +2,7 @@ package terst
 
 import (
 	"math"
+	"reflect"
 	"testing"
 )
 
@@ -180,4 +181,52 @@ func TestFail(t *testing.T) {
 	}
 
 	Fail("This test should fail.")
+}
+
+type _integer int
+
+func Test_toInteger(t *testing.T) {
+	Terst(t)
+
+	Is(0, 0)
+	Is(_integer(0), 0)
+	if false {
+		toInteger(reflect.ValueOf("abc"))
+	}
+}
+
+type _float float64
+
+func Test_toFloat(t *testing.T) {
+	Terst(t)
+
+	Is(0.0, 0.0)
+	Is(_float(0.0), 0.0)
+	if false {
+		toFloat(reflect.ValueOf("abc"))
+	}
+}
+
+type _string string
+
+func Test_toString(t *testing.T) {
+	Terst(t)
+
+	Is("", "")
+	Is(_string(""), "")
+	if false {
+		toString(reflect.ValueOf(0))
+	}
+}
+
+type _boolean bool
+
+func Test_toBoolean(t *testing.T) {
+	Terst(t)
+
+	Is(false, false)
+	Is(_boolean(false), false)
+	if false {
+		toBoolean(reflect.ValueOf(0))
+	}
 }
