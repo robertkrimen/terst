@@ -1,8 +1,8 @@
 package terst
 
 import (
-	"testing"
 	"math"
+	"testing"
 )
 
 type Xyzzy struct{}
@@ -130,10 +130,10 @@ func TestFailing(t *testing.T) {
 func TestUnknownDepth(t *testing.T) {
 	terst := Terst(t)
 	IsNot(terst, "")
-	func(){
-		func(){
-			func(){
-				func(){
+	func() {
+		func() {
+			func() {
+				func() {
 					terst.Is(terst.findDepth(), 4)
 				}()
 			}()
@@ -181,4 +181,3 @@ func TestFail(t *testing.T) {
 
 	Fail("This test should fail.")
 }
-

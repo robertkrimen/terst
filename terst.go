@@ -1,4 +1,4 @@
-/* 
+/*
 Package terst is a terse (terst = test + terse), easy-to-use testing library for Go.
 
 terst is compatible with (and works via) the standard testing package: http://golang.org/pkg/testing
@@ -12,7 +12,7 @@ terst is compatible with (and works via) the standard testing package: http://go
 		Terst(t) // Associate terst methods with t (the current testing.T)
 
 		Is(getApple(), "apple") // Pass
-		Is(getOrange(), "orange") // Fail: emits nice-looking diagnostic 
+		Is(getOrange(), "orange") // Fail: emits nice-looking diagnostic
 
 		Compare(1, ">", 0) // Pass
 		Compare(1, "==", 1.0) // Pass
@@ -394,7 +394,7 @@ func (self *Tester) likeOrUnlike(wantLike bool, have, want interface{}, descript
 // float testing.
 //
 // For example:
-//	
+//
 //		Compare(float32(1.0), "<", int8(2)) // A valid test
 //
 //		result := float32(1.0) < int8(2) // Will not compile because of the type mismatch
@@ -684,7 +684,7 @@ func newComparator(left interface{}, operator compareOperator, right interface{}
 	if scopeEqual {
 		targetKind = rightKind // Since left and right are the same, the targetKind is Integer/Float/String/Boolean
 	} else {
-		// Examine the prefix of reflect.Value.Kind().String() to see if there is a similarity of 
+		// Examine the prefix of reflect.Value.Kind().String() to see if there is a similarity of
 		// the left value to right value
 		lk := leftValue.Kind().String()
 		hasPrefix := func(prefix string) bool {
@@ -932,7 +932,7 @@ func findTestEntry() uintptr {
 //			testingMethod( ... ) // If something in testingMethod fails, this line number will come up
 //			testingMethod( ... )
 //		}
-//	
+//
 // By default, when a test fails, terst will report the outermost line that led to the failure.
 // Usually this is what you want, but if you need to drill down, you can by inserting a special
 // call at the top of your testing method:
