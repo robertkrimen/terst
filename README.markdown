@@ -54,7 +54,7 @@ comparators are available:
     =~      # regexp.MustCompile(expect).Match{String}(got)
     !~      # !regexp.MustCompile(expect).Match{String}(got)
 
-Basic usage with the default comparator (`==`):
+Basic usage with the default comparator (==):
 
     Is(<got>, <expect>)
 
@@ -73,8 +73,8 @@ A bit trickier:
     Is("Nothing happens.", "=~", `ing(\s+)happens\.$`)
 
 Is should only be called under a Terst(t, ...) call. For a standalone version,
-use IsErr(...). If no scope is found and the comparison is false, then Is will
-panic the error.
+use IsErr. If no scope is found and the comparison is false, then Is will panic
+the error.
 
 #### func  IsErr
 
@@ -86,6 +86,11 @@ true, an ErrFail if the comparison is false, or an ErrInvalid if the comparison
 is invalid. IsErr also takes an optional argument, a comparator, that changes
 how the comparison is made.
 
+Is & IsErr are similar but different:
+
+    Is(...)     // Should only be called within a Terst(...) call
+    IsErr(...)  // A standalone comparator, the same as Is, just without the automatic reporting
+
 #### func  Terst
 
 ```go
@@ -95,15 +100,15 @@ Terst creates a testing scope, where Is can be called and errors will be
 reported according to the top-level location of the comparison, and not where
 the Is call actually takes place. For example:
 
-    func test() {
-        Is(2 + 2, 5) // <--- This failure is reported below.
+    func test(value int) {
+        Is(value, 5) // <--- This failure is reported below.
     }
 
     Terst(t, func(){
 
         Is(2, ">", 3) // <--- An error is reported here.
 
-        test() // <--- An error is reported here.
+        test(5) // <--- An error is reported here.
 
     })
 

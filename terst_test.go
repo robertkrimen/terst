@@ -12,6 +12,14 @@ func fail() {
 	Is("abc", ">", regexp.MustCompile(`abc`))
 }
 
+func TestSynopsis(t *testing.T) {
+	Terst(t, func() {
+		Is(1, ">", 0)
+		Is(2+2, "!=", 5)
+		Is("Nothing happens.", "=~", `ing(\s+)happens\.$`)
+	})
+}
+
 func Test(t *testing.T) {
 	Terst(t, func() {
 		Is("abc", "abc")
@@ -29,6 +37,8 @@ func Test(t *testing.T) {
 		var abc map[string]string
 
 		Is(abc, nil)
+
+		Is([]byte("Nothing happens."), "=~", `ing(\s+)happens\.$`)
 
 		{
 			err := IsErr(abc, "!=", nil)
@@ -136,4 +146,7 @@ func Test_IsErr(t *testing.T) {
 	test(1, ">", 0, nil)
 
 	test(1, "<", 0, "FAIL (<) got: 1 (int) expected: < 0 (int)")
+
+	test([]byte("def"), "=~", `abc$`, "FAIL (=~) got: def [100 101 102] ([]uint8=slice) expected: abc$")
+
 }
