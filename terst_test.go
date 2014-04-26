@@ -1,232 +1,135 @@
 package terst
 
 import (
+	"fmt"
 	"math"
-	"reflect"
+	"regexp"
+	"strings"
 	"testing"
 )
 
-type Xyzzy struct{}
-
-func (self Xyzzy) String() string {
-	return "Nothing happens."
+func fail() {
+	Is("abc", ">", regexp.MustCompile(`abc`))
 }
 
-func TestDuJour(t *testing.T) {
-	Terst(t)
-	if false {
-		Is(1, 2, "Hello, World.")
-	}
-}
+func Test(t *testing.T) {
+	Terst(t, func() {
+		Is("abc", "abc")
 
-func TestIsWithoutTerst(t *testing.T) {
-	// The following will panic
-	if false {
-		Terst(nil)
-		Is(1, 1)
-	}
-}
+		Is("abc", "==", "abc")
 
-func TestNewCompareOperator(t *testing.T) {
-	Terst(t)
-	test := func(input string, expect []string) {
-		result := newCompareOperatorRE.FindStringSubmatch(input)
-		Is(result[1:], expect)
-	}
-	test("#= ==", []string{"#=", "=="})
-	test("  {}* ==", []string{"{}*", "=="})
-	test("  {}* ==  ", []string{"{}*", "=="})
-	test("   ==  ", []string{"", "=="})
-}
+		Is("abc", "!=", "def")
 
-func TestCompare(t *testing.T) {
-	Terst(t)
-	Compare([]string{""}, "==", []string{""})
-	Compare([]string{""}, "!=", []string{"Xyzzy"})
-	Compare([]string{""}, "{}* ==", []string{""})
-	Compare([]string{""}, "{}* !=", []string{"Xyzzy"})
-	Compare([]string{""}, "{}~ ==", []string{""})
-	Compare([]string{""}, "{}~ !=", []string{"Xyzzy"})
-	if false {
-		// These fail because you cannot do []type == []type
-		Compare([]string{""}, "{}= !=", []string{""})
-		Compare([]string{""}, "{}= !=", []string{"Xyzzy"})
-	}
-	Compare(&Xyzzy{}, "==", &Xyzzy{})
-	if false {
-		// 20140216 - This is broken now, not sure why or what
-		// we should be testing for. :(
-		Compare(&Xyzzy{}, "{}= !=", &Xyzzy{})
-	}
-	Compare(float32(1.1), "<", int8(2))
-	if false {
-		// This will not parse/compile because of a type mismatch
-		// Pass(float32(1.1) < int(2))
-	}
-	Compare(&Xyzzy{}, "!=", 1)
-	Compare(1, "!=", Xyzzy{})
-}
+		Is(0, "!=", 3.14159)
 
-func TestCompareOperator(t *testing.T) {
-	Terst(t)
+		Is(math.NaN(), math.NaN())
 
-	operator := newCompareOperator("#= ==")
-	Is(operator.scope, compareScopeEqual)
-	Is(operator.comparison, "==")
-}
+		Is(nil, nil)
 
-func TestIs(t *testing.T) {
-	Terst(t)
+		var abc map[string]string
 
-	Is(true, "true")
-	Is(1, "1")
-	Is(Xyzzy{}, "Nothing happens.")
-}
+		Is(abc, nil)
 
-func TestPassing(t *testing.T) {
-	Terst(t).enableSelfTesting()
+		if false {
+			Is(abc, "!=", nil)
 
-	Is(1, 1)
-	Is("apple", "apple")
-	IsNot("apple", "orange")
-	Is(&Xyzzy{}, &Xyzzy{})
-
-	Compare(1, "==", 1.0)
-	Compare(1, "==", 1)
-	Compare(&Xyzzy{}, "#* ==", &Xyzzy{})
-	Compare("abc", ">=", "abc")
-	Compare(1, "#= ==", 1)
-}
-
-func TestFailing(t *testing.T) {
-	Terst(t).enableSelfTesting().failIsPass()
-
-	Equal("apple", "orange")
-
-	IsTrue(false)
-	IsFalse(true)
-
-	Is("1", 1)
-	Is("true", true)
-	Is("1", 1)
-
-	Like(1, 1.1)
-	Unlike("apple", `pp`)
-
-	Compare(true, ">", false)
-	Compare(math.Inf(0), "==", 2)
-	Compare("test", "#= ==", int32(1))
-	Compare(uint64(math.MaxUint64), "<", int64(math.MinInt32))
-	Compare("apple", "==", "banana")
-	Compare(false, "==", true)
-	Compare(uint(1), "==", int(2))
-	Compare(uint(1), "==", 1.1)
-	Compare(10, "<", 4.0)
-	Compare(6, ">", 6.0)
-	Compare("abcd", "<", "abc")
-	Compare("ab", ">=", "abc")
-
-}
-
-func TestUnknownDepth(t *testing.T) {
-	terst := Terst(t)
-	IsNot(terst, "")
-	func() {
-		func() {
 			func() {
-				func() {
-					terst.Is(terst.findDepth(), 4)
-				}()
+				fail()
 			}()
-		}()
-	}()
+
+			Is("abc", ">", "def")
+		}
+	})
 }
 
-func testDepth1() {
-	Is(0, 1)
+func Test_findTestFunc(t *testing.T) {
+	Terst(t, func() {
+		cl := Caller()
+		Is(cl.TestFunc().Name(), "github.com/robertkrimen/terst.Test_findTestFunc")
+	})
 }
 
-func testDepth0() {
-	Terst().Focus()
+func Test_IsErr(t *testing.T) {
 
-	if true {
-		testDepth1()
-		return
+	{
+		// NaN == NaN
+		result, err := compareNumber(math.NaN(), math.NaN())
+		if err != nil {
+			t.Errorf("NaN =? NaN: %s", err.Error())
+		} else if result != 0 {
+			t.Errorf("NaN =? NaN: %d", result)
+		}
 	}
 
-	Is(0, 1)
-}
-
-var skipBreaking bool = true
-
-func TestDepth(t *testing.T) {
-	Terst(t)
-
-	if skipBreaking {
-		return
+	if err := IsErr(math.NaN(), math.NaN()); err != nil {
+		t.Error(err)
 	}
 
-	if true {
-		testDepth0()
-
-		Is(0, 1)
-	}
-}
-
-func TestFail(t *testing.T) {
-	Terst(t)
-
-	if skipBreaking {
-		return
+	if err := IsErr("", ""); err != nil {
+		t.Error(err)
 	}
 
-	Fail("This test should fail.")
-}
-
-type _integer int
-
-func Test_toInteger(t *testing.T) {
-	Terst(t)
-
-	Is(0, 0)
-	Is(_integer(0), 0)
-	if false {
-		toInteger(reflect.ValueOf("abc"))
+	if err := IsErr("abc", ""); err == nil {
+		t.Error(err)
 	}
-}
 
-type _float float64
-
-func Test_toFloat(t *testing.T) {
-	Terst(t)
-
-	Is(0.0, 0.0)
-	Is(_float(0.0), 0.0)
-	if false {
-		toFloat(reflect.ValueOf("abc"))
+	if err := IsErr(1, "<=", 1); err != nil {
+		t.Error(err)
 	}
-}
 
-type _string string
-
-func Test_toString(t *testing.T) {
-	Terst(t)
-
-	Is("", "")
-	Is(_string(""), "")
-	if false {
-		toString(reflect.ValueOf(0))
+	if err := IsErr(0, "<", 1); err != nil {
+		t.Error(err)
 	}
-}
 
-type _boolean bool
-
-func Test_toBoolean(t *testing.T) {
-	Terst(t)
-
-	Is(false, false)
-	Is(_boolean(false), false)
-	if false {
-		toBoolean(reflect.ValueOf(0))
+	if err := IsErr(int64(math.MaxInt64), "<", uint64(math.MaxUint64)); err != nil {
+		t.Error(err)
 	}
+
+	if err := IsErr(int64(math.MaxInt64), ">=", uint64(math.MaxUint64)); err == nil {
+		t.Error(err)
+	}
+
+	if err := IsErr(fmt.Errorf("abc"), "abc"); err != nil {
+		t.Error(err)
+	}
+
+	if err := IsErr(fmt.Errorf("abc"), ""); err == nil {
+		t.Error(err)
+	}
+
+	test := func(arguments ...interface{}) bool {
+		expect := arguments[len(arguments)-1]
+		arguments = arguments[:len(arguments)-1]
+
+		input0 := arguments[0]
+		input1 := arguments[len(arguments)-1]
+
+		err := IsErr(arguments...)
+		if expect == nil && err == nil {
+			return true
+		} else if expect != nil && err != nil {
+			expect := expect.(string)
+			got := strings.Join(strings.Fields(err.Error()), " ")
+			if got == expect {
+				return true
+			}
+			t.Errorf("\nerr != expect:\n          got: %v\n       expect: %v", got, expect)
+		} else if err == nil {
+			t.Errorf("\nerr == nil: %v\n       got: %v\n    expect: %v", expect, input0, input1)
+		} else {
+			got := strings.Join(strings.Fields(err.Error()), " ")
+			t.Errorf("\nerr != nil: %v\n       got: %v\n    expect: %v", got, input0, input1)
+		}
+		return false
+	}
+
+	test("", "", nil)
+
+	test("abc", "def", "FAIL (==) got: abc expected: def")
+
+	test("abc", ">", "def", "INVALID (>): got: abc (string) expected: def (string)")
+
+	test(1, ">", 0, nil)
+
+	test(1, "<", 0, "FAIL (<) got: 1 (int) expected: < 0 (int)")
 }

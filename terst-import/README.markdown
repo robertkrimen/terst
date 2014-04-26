@@ -1,6 +1,7 @@
 # terst-import
 --
-Command terst-import will smuggol "github.com/robertkrimen/terst" into a local Go package/repository
+Command terst-import will smuggol "github.com/robertkrimen/terst" into a local
+Go package/repository
 
 ### Install
 
