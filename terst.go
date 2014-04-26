@@ -44,10 +44,10 @@ import (
 // Is compares two values (got & expect) and returns true if the comparison is true,
 // false otherwise. In addition, if the comparison is false, Is will report the error
 // in a manner similar to testing.T.Error(...). Is also takes an optional argument,
-// an operator, that changes how the comparison is made.  The following
-// operators are available:
+// a comparator, that changes how the comparison is made.  The following
+// comparators are available:
 //
-//      ==      # got == expect, This is the default
+//      ==      # got == expect (default)
 //      !=      # got != expect
 //
 //      >       # got > expect (float32, uint, uint16, int, int64, ...)
@@ -57,6 +57,14 @@ import (
 //
 //      =~      # regexp.MustCompile(expect).Match{String}(got)
 //      !~      # !regexp.MustCompile(expect).Match{String}(got)
+//
+// Basic usage with the default comparator (`==`):
+//
+//      Is(<got>, <expect>)
+//
+// Specifying a different comparator:
+//
+//      Is(<got>, <comparator>, <expect>)
 //
 // A simple comparison:
 //
@@ -277,11 +285,11 @@ func compareNumber(got, expect interface{}) (int, error) {
 
 // IsErr compares two values (got & expect) and returns nil if the comparison is true, an ErrFail if
 // the comparison is false, or an ErrInvalid if the comparison is invalid. IsErr also
-// takes an optional argument, an operator, that changes how the comparison is made.
+// takes an optional argument, a comparator, that changes how the comparison is made.
 //
 func IsErr(arguments ...interface{}) error {
 	var got, expect interface{}
-	operator := "=="
+	comparator := "=="
 	switch len(arguments) {
 	case 0, 1:
 		return fmt.Errorf("invalid number of arguments to IsErr: %d", len(arguments))
@@ -289,9 +297,9 @@ func IsErr(arguments ...interface{}) error {
 		got, expect = arguments[0], arguments[1]
 	default:
 		if value, ok := arguments[1].(string); ok {
-			operator = value
+			comparator = value
 		} else {
-			return fmt.Errorf("invalid operator: %v", arguments[1])
+			return fmt.Errorf("invalid comparator: %v", arguments[1])
 		}
 		got, expect = arguments[0], arguments[2]
 	}
@@ -299,7 +307,7 @@ func IsErr(arguments ...interface{}) error {
 	var result int
 	var err error
 
-	switch operator {
+	switch comparator {
 	case "<", "<=", ">", ">=":
 		result, err = compareNumber(got, expect)
 	case "=~", "!~":
@@ -307,13 +315,13 @@ func IsErr(arguments ...interface{}) error {
 	case "==", "!=":
 		result, err = compareOther(got, expect)
 	default:
-		return fmt.Errorf("invalid operator: %s", operator)
+		return fmt.Errorf("invalid comparator: %s", comparator)
 	}
 
 	if err == errInvalid {
 		return ErrInvalid(fmt.Errorf(
 			"\nINVALID (%s):\n        got: %v (%T)\n   expected: %v (%T)",
-			operator,
+			comparator,
 			got, got,
 			expect, expect,
 		))
@@ -323,7 +331,7 @@ func IsErr(arguments ...interface{}) error {
 
 	equality, pass := false, false
 
-	switch operator {
+	switch comparator {
 	case "==", "=~":
 		equality = true
 		pass = result == 0
@@ -344,16 +352,16 @@ func IsErr(arguments ...interface{}) error {
 		if equality {
 			return ErrFail(fmt.Errorf(
 				"\nFAIL (%s)\n     got: %v%s\nexpected: %v%s",
-				operator,
+				comparator,
 				got, typeKindString(got),
 				expect, typeKindString(expect),
 			))
 		}
 		return ErrFail(fmt.Errorf(
 			"\nFAIL (%s)\n     got: %v%s\nexpected: %s %v%s",
-			operator,
+			comparator,
 			got, typeKindString(got),
-			operator, expect, typeKindString(expect),
+			comparator, expect, typeKindString(expect),
 		))
 	}
 
