@@ -30,14 +30,18 @@ func Test(t *testing.T) {
 
 		Is(abc, nil)
 
-		if false {
-			Is(abc, "!=", nil)
+		{
+			err := IsErr(abc, "!=", nil)
+			Is(err, "!=", nil)
 
-			func() {
-				fail()
-			}()
+			if false {
+				func() {
+					fail()
+				}()
+			}
 
-			Is("abc", ">", "def")
+			err = IsErr("abc", ">", "def")
+			Is(err, "!=", nil)
 		}
 	})
 }

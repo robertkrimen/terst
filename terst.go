@@ -3,8 +3,6 @@ Package terst is a terse (terst = test + terse), easy-to-use testing library for
 
 terst is compatible with (and works via) the standard testing package: http://golang.org/pkg/testing
 
-Do not import terst directly, instead use `terst-import` to copy it into your testing environment.
-
     var is = terst.Is
 
     func Test(t *testing.T) {
@@ -17,6 +15,14 @@ Do not import terst directly, instead use `terst-import` to copy it into your te
             is(abc, nil)
         }
     }
+
+Do not import terst directly, instead use `terst-import` to copy it into your testing environment:
+
+https://github.com/robertkrimen/terst/tree/master/terst-import
+
+    $ go get github.com/robertkrimen/terst/terst-import
+
+    $ terst-import
 
 */
 package terst
@@ -79,10 +85,10 @@ func Is(arguments ...interface{}) bool {
 }
 
 type (
-	// ErrFail indicates a comparison failure (e.g. 0 > 1)
+	// ErrFail indicates a comparison failure (e.g. 0 > 1).
 	ErrFail error
 
-	// ErrInvalid indicates an invalid comparison (e.g. bool == string)
+	// ErrInvalid indicates an invalid comparison (e.g. bool == string).
 	ErrInvalid error
 )
 
@@ -112,7 +118,7 @@ func floatCompare(a float64, b float64) int {
 	} else if a < b {
 		return -1
 	}
-	// NaN == NaN for our purposes
+	// NaN == NaN
 	return 0
 }
 

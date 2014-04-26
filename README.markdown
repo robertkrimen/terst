@@ -8,9 +8,6 @@ Go.
 terst is compatible with (and works via) the standard testing package:
 http://golang.org/pkg/testing
 
-Do not import terst directly, instead use `terst-import` to copy it into your
-testing environment.
-
     var is = terst.Is
 
     func Test(t *testing.T) {
@@ -23,6 +20,15 @@ testing environment.
             is(abc, nil)
         }
     }
+
+Do not import terst directly, instead use `terst-import` to copy it into your
+testing environment:
+
+https://github.com/robertkrimen/terst/tree/master/terst-import
+
+    $ go get github.com/robertkrimen/terst/terst-import
+
+    $ terst-import
 
 ## Usage
 
@@ -174,7 +180,7 @@ function.
 type ErrFail error
 ```
 
-ErrFail indicates a comparison failure (e.g. 0 > 1)
+ErrFail indicates a comparison failure (e.g. 0 > 1).
 
 #### type ErrInvalid
 
@@ -182,7 +188,7 @@ ErrFail indicates a comparison failure (e.g. 0 > 1)
 type ErrInvalid error
 ```
 
-ErrInvalid indicates an invalid comparison (e.g. bool == string)
+ErrInvalid indicates an invalid comparison (e.g. bool == string).
 
 --
 **godocdown** http://github.com/robertkrimen/godocdown
