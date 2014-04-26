@@ -1,11 +1,8 @@
-.PHONY: test synopsis release install clean
+.PHONY: test release install clean
 
 test:
 	go test -i
 	go test
-
-synopsis:
-	cd .test && go test
 
 release: test
 	(cd terst-import && godocdown -signature . > README.markdown) || false
